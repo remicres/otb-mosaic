@@ -1,16 +1,37 @@
-#ifndef __StreamingLargeFeatherMosaicFilter_H
-#define __StreamingLargeFeatherMosaicFilter_H
+/*=========================================================================
+ *
+ *  Copyright 2015 Irstea
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0.txt
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *=========================================================================*/
+
+
+#ifndef __StreamingFeatherMosaicFilter_H
+#define __StreamingFeatherMosaicFilter_H
 
 #include "otbStreamingMosaicFilterWithBlendingBase.h"
 #include "itkLinearInterpolateImageFunction.h"
 
 namespace otb
 {
-/** \class StreamingLargeFeatherMosaicFilter
- * \brief Computes the mosaic of an input images set using feathering technique.
- * The output is a nice seamless mosaic. Images are all added-weighted on all
- * overlapping areas. This could give nice results for perfectly aligned
- * images but can also cause blur on misaligned overlaps.
+/** \class StreamingFeatherMosaicFilter
+ * \brief Computes the mosaic of an input images set using
+ * feathering technique. The output is a nice seamless mosaic.
+ * Images are added-weighted in a one-by-one fashion, blended
+ * from the images boundaries to a specified transition distance.
+ * The smoothness of the transition curve can be set (exponent).
+ * Feathering is performed with respect to the input images order.
  *
  * Inputs are images and distance images. Both needs to be added with the PushBackInputs() method.
  *
@@ -20,18 +41,20 @@ namespace otb
  * The "no data value", output spacing, interpolator can be chosen.
  *
  * TODO:
- * -maybe change containers from std::vector to itk::something?
+ * -change containers from std::vector to itk::something
+ * -move container class to private
+ * -create accessors
  *
  * \ingroup Multithreaded
  */
 template <class TInputImage, class TOutputImage, class TDistanceImage, class TInternalValueType=double>
-class ITK_EXPORT StreamingLargeFeatherMosaicFilter :
+class ITK_EXPORT StreamingFeatherMosaicFilter :
   public StreamingMosaicFilterWithBlendingBase<TInputImage, TOutputImage, TDistanceImage, TInternalValueType>
 {
 public:
 
   /** Standard Self typedef */
-  typedef StreamingLargeFeatherMosaicFilter Self;
+  typedef StreamingFeatherMosaicFilter Self;
   typedef StreamingMosaicFilterWithBlendingBase<TInputImage, TOutputImage, TDistanceImage,
                                                 TInternalValueType> Superclass;
   typedef itk::SmartPointer<Self> Pointer;
@@ -42,7 +65,7 @@ public:
   itkNewMacro(Self);
 
   /** Runtime information support. */
-  itkTypeMacro(StreamingLargeFeatherMosaicFilter, StreamingMosaicFilterBlendingBase);
+  itkTypeMacro(StreamingFeatherMosaicFilter, StreamingMosaicFilterWithBlendingBase);
 
   /** Input image typedefs.  */
   typedef typename Superclass::InputImageType              InputImageType;
@@ -79,32 +102,46 @@ public:
   typedef typename Superclass::StreamingTraitsType     StreamingTraitsType;
 
   /** Distance image typedefs */
-  typedef TDistanceImage                                            DistanceImageType;
-  typedef typename Superclass::DistanceImagePointer                 DistanceImagePointer;
-  typedef typename Superclass::DistanceImageConstPointer            DistanceImageConstPointer;
-  typedef typename Superclass::DistanceImagePointType               DistanceImagePointType;
-  typedef typename Superclass::DistanceImagePixelType               DistanceImagePixelType;
-  typedef typename Superclass::DistanceImageInternalPixelType       DistanceImageInternalPixelType;
-  typedef typename Superclass::DistanceImageInterpolatorType        DistanceImageInterpolatorType;
-  typedef typename Superclass::DistanceImageDefaultInterpolatorType DistanceImageDefaultInterpolatorType;
-  typedef typename Superclass::DistanceImageInterpolatorPointer     DistanceImageInterpolatorPointer;
+  typedef TDistanceImage                                DistanceImageType;
+  typedef typename DistanceImageType::Pointer           DistanceImagePointer;
+  typedef typename DistanceImageType::ConstPointer      DistanceImageConstPointer;
+  typedef typename DistanceImageType::PointType         DistanceImagePointType;
+  typedef typename DistanceImageType::PixelType         DistanceImagePixelType;
+  typedef typename DistanceImageType::InternalPixelType DistanceImageInternalPixelType;
+  typedef typename DistanceImageType::RegionType        DistanceImageRegionType;
+  typedef typename itk::InterpolateImageFunction<DistanceImageType>
+    DistanceImageInterpolatorType;
+  typedef typename itk::LinearInterpolateImageFunction<DistanceImageType>
+    DistanceImageDefaultInterpolatorType;
+  typedef typename DistanceImageInterpolatorType::Pointer DistanceImageInterpolatorPointer;
+
+  /** Feathering transition distance accessors */
+  itkSetMacro(FeatheringTransitionDistance, InternalValueType);
+  itkGetMacro(FeatheringTransitionDistance, InternalValueType);
+
+  /** Feathering transition smoothness accessors */
+  itkSetMacro(FeatheringSmoothness, InternalValueType);
+  itkGetMacro(FeatheringSmoothness, InternalValueType);
 
 protected:
-  StreamingLargeFeatherMosaicFilter() {
+  StreamingFeatherMosaicFilter();
+  virtual ~StreamingFeatherMosaicFilter() {
   }
 
-  virtual ~StreamingLargeFeatherMosaicFilter() {
-  }
-
-  /** Overrided method */
+  /** Overrided methods */
   virtual void ThreadedGenerateData(const OutputImageRegionType& outputRegionForThread, itk::ThreadIdType threadId );
+
+private:
+  InternalValueType m_FeatheringTransitionDistance; // feathering transition
+                                                    // distance
+  InternalValueType m_FeatheringSmoothness;         // feathering exponent
 
 }; // end of class
 
 } // end namespace otb
 
 #ifndef OTB_MANUAL_INSTANTIATION
-#include "otbStreamingLargeFeatherMosaicFilter.hxx"
+#include "otbStreamingFeatherMosaicFilter.hxx"
 #endif
 
 #endif
