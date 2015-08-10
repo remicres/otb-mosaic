@@ -156,16 +156,9 @@ protected:
   ~StreamingMosaicFilterBase() {
   }
 
-  /** Any mosaic filter can be implemented as a multithreaded filter.
-   * Therefore, this implementation provides a ThreadedGenerateData() routine
-   * which is called for each processing thread. The output image data is
-   * allocated automatically by the superclass prior to calling
-   * ThreadedGenerateData().  ThreadedGenerateData can only write to the
-   * portion of the output image specified by the parameter
-   * "outputRegionForThread"
-   * /
-
-  /** Methods */
+  /**
+   * Methods
+   */
   virtual void GenerateOutputInformation(void);
 
   virtual void GenerateInputRequestedRegion(void);
@@ -192,11 +185,11 @@ protected:
     usedInputIndices.push_back(index);
   }
 
-  virtual const unsigned int GetUsedInputImageIndice(unsigned int i){
+  virtual unsigned int GetUsedInputImageIndice(unsigned int i){
     return usedInputIndices[i];
   }
 
-  virtual const unsigned int GetNumberOfUsedInputImages(){
+  virtual unsigned int GetNumberOfUsedInputImages(){
     return usedInputIndices.size();
   }
 
@@ -204,12 +197,12 @@ protected:
   virtual void ComputeOutputParameters();
 
   /** Get the number of input images */
-  virtual const unsigned int GetNumberOfInputImages() {
+  virtual unsigned int GetNumberOfInputImages() {
     return this->GetNumberOfInputs();
   }
 
   /** Get number of bands */
-  virtual const unsigned int GetNumberOfBands() {
+  virtual unsigned int GetNumberOfBands() {
     return nbOfBands;
   }
 

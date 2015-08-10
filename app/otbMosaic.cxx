@@ -66,8 +66,11 @@
 // Solver for mosaic harmonization
 #include "otbQuadraticallyConstrainedSimpleSolver.h"
 
-// sqrt
+// maths
 #include "vcl_complex.h"
+
+// temp filename
+#include <boost/filesystem.hpp>
 
 using namespace std;
 
@@ -656,9 +659,9 @@ private:
     SetParameterDescription("vdstats", "VectorData files to be used for statistics computation (harmonization)");
     MandatoryOff("vdstats");
 
-    // comp
-    AddParameter(ParameterType_Group,"comp","Mosaic composition mode");
-    SetParameterDescription("comp","This group of parameters allow to tune the mosaic composition behavior");
+    // comp (compositing)
+    AddParameter(ParameterType_Group,"comp","Mosaic compositing mode");
+    SetParameterDescription("comp","This group of parameters allow to set the mosaic compositing");
 
     // comp.feathering
     AddParameter(ParameterType_Choice,"comp.feather","Feathering method");
@@ -669,25 +672,27 @@ private:
     SetParameterDescription("comp.feather.none",
                             "No feathering method is used (Very fast). Images are stacked in overlaps");
 
-    // comp.feather.single
+    // comp.feather.large
     AddChoice("comp.feather.large","The large blending composition mode");
     SetParameterDescription("comp.feather.large",
-                            "Compose the mosaic using alpha blending technique. May generate blur when inputs are not well aligned");
+                            "Blends all images on the maximum overlapping areas. May generate blur when inputs are not well aligned");
 
     // comp.feather.slim
     AddChoice("comp.feather.slim","The fine blending composition mode");
     SetParameterDescription("comp.feather.slim",
-                            "Compose the mosaic using multi-scale alpha blending technique. Slow but nice");
+                            "Blends the last image over earlier ones in areas of overlap, on a given transition distance");
+    // comp.feather.slim.exponent (i.e. blending smoothness)
     AddParameter(ParameterType_Float, "comp.feather.slim.exponent", "Transition smoothness (Unitary exponent = linear transition)");
     SetDefaultParameterFloat("comp.feather.slim.exponent", 1.0);
     SetMinimumParameterFloatValue("comp.feather.slim.exponent", 0);
     MandatoryOff("comp.feather.slim.exponent");
+    // comp.feather.slim.lenght (i.e. blending lenght)
     AddParameter(ParameterType_Float, "comp.feather.slim.lenght", "Transition lenght (In cartographic units)");
     MandatoryOn("comp.feather.slim.lenght");
     SetMinimumParameterFloatValue("comp.feather.slim.lenght", 0);
     MandatoryOff("comp.feather.slim.lenght");
 
-    // harmo
+    // harmo (harmonization)
     AddParameter(ParameterType_Group,"harmo","Spectral bands harmonization mode");
     SetParameterDescription("harmo","This group of parameters allow to tune the mosaic harmonization behavior");
 
@@ -703,7 +708,7 @@ private:
     SetParameterDescription("harmo.method.rgb",
                             "Works on RGB colors only. Use an harmonization method based on quadratic programming in decorrelated color space");
 
-    // harmo.cost
+    // harmo.cost (harmonization cost function)
     AddParameter(ParameterType_Choice,"harmo.cost","harmonization cost function");
     SetParameterDescription("harmo.cost","Set the harmonization cost function");
     AddChoice("harmo.cost.rmse","RMSE based");
@@ -732,13 +737,13 @@ private:
     SetDefaultParameterInt("interpolator.bco.radius", 2);
 
     // Spacing of the output image
-    AddParameter(ParameterType_Group, "outputs", "Output Image Grid");
-    SetParameterDescription("outputs",
+    AddParameter(ParameterType_Group, "output", "Output Image Grid");
+    SetParameterDescription("output",
                             "This group of parameters allows to define the grid on which the input image will be resampled.");
-    AddParameter(ParameterType_Float, "outputs.spacing", "Pixel Size");
-    SetParameterDescription("outputs.spacing",
+    AddParameter(ParameterType_Float, "output.spacing", "Pixel Size");
+    SetParameterDescription("output.spacing",
                             "Size of each pixel along X axis (meters for cartographic projections, degrees for geographic ones)");
-    MandatoryOff("outputs.spacing");
+    MandatoryOff("output.spacing");
 
     // temp. dir
     AddParameter(ParameterType_String, "tmpdir", "Temporary directory storing masks");
@@ -1063,10 +1068,10 @@ private:
 
     filter->SetAutomaticOutputParametersComputation(true);
     filter->UpdateOutputInformation();
-    if (this->HasValue("outputs.spacing") )
+    if (this->HasValue("output.spacing") )
       {
-      outputSpacing[0] = GetParameterFloat("outputs.spacing");
-      outputSpacing[1] = -1.0*GetParameterFloat("outputs.spacing");
+      outputSpacing[0] = GetParameterFloat("output.spacing");
+      outputSpacing[1] = -1.0*GetParameterFloat("output.spacing");
       typename TMosaicFilterType::OutputImageSpacingType spacing = filter->GetOutputSpacing();
       typename TMosaicFilterType::OutputImageSizeType size = filter->GetOutputSize();
       typename TMosaicFilterType::OutputImagePointType origin = filter->GetOutputOrigin();
@@ -1134,6 +1139,12 @@ private:
 
     // Get parameters
     m_TempDirectory = GetParameterAsString("tmpdir");
+    if (m_TempDirectory.empty())
+      {
+      boost::filesystem::path temp = boost::filesystem::temp_directory_path();
+      m_TempDirectory = temp.native();
+      }
+    otbAppLogINFO(<<"Temporary directory is:"<<m_TempDirectory);
     m_AlphaMasksSpacingMultiplicator = GetParameterFloat("alphamasks.spacing");
 
     /////////////////////////////////////////////////////////////

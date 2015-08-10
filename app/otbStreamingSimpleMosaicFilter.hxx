@@ -46,14 +46,14 @@ StreamingSimpleMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
   const unsigned int nbOfUsedInputImages = Superclass::GetNumberOfUsedInputImages();
 
   // Get number of bands
-  const unsigned int nbOfBands = Superclass::GetNumberOfBands();
+  const unsigned int nBands = Superclass::GetNumberOfBands();
 
   // Iterate through the thread region
   IteratorType outputIt(mosaicImage, outputRegionForThread);
 
   // Prepare interpolated pixel
   InternalPixelType interpolatedMathPixel;
-  interpolatedMathPixel.SetSize(nbOfBands);
+  interpolatedMathPixel.SetSize(nBands);
 
   // Instanciate interpolators which are DEDICATED TO THE THREAD ! (so need to
   // copy the m_interpolator)
@@ -91,7 +91,7 @@ StreamingSimpleMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
         if (IsPixelNotEmpty(interpolatedPixel) )
           {
           // Update the output pixel
-          for (unsigned int band = 0 ; band < nbOfBands ; band++)
+          for (unsigned int band = 0 ; band < nBands ; band++)
             {
             if (this->GetShiftScaleInputImages() )
               {

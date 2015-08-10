@@ -46,8 +46,11 @@ namespace otb {
  * Output:
  * N x 1 Vector of scales to apply to images
  *
- * see Cresson & St-Geours in IEEE JSTARS, "Natural color satellite image
+ *  For more details, see Cresson & St-Geours "Natural color satellite image
  *  mosaicking using quadratic programming in decorrelated color space"
+ *  in IEEE JSTARS Issue 99 Volume PP, July 2015
+ *
+ *  http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7154397&filter%3DAND%28p_IS_Number%3A4609444%29
  *
  */
 
@@ -109,9 +112,9 @@ public:
     const unsigned int n = matrix.cols();
 
     m_AreaInOverlaps = RealMatrixType (n,n,0);
-    for (int i = 0 ; i < n ; i++)
+    for (unsigned int i = 0 ; i < n ; i++)
       {
-      for (int j = 0 ; j < n ; j++)
+      for (unsigned int j = 0 ; j < n ; j++)
         m_AreaInOverlaps[i][j] = 1.0 * matrix[i][j];
       }
   }

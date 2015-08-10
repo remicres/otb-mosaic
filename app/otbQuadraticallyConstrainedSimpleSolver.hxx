@@ -119,7 +119,7 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
     w = (ValueType) m_WeightOfStandardDeviationTerm;
     }
 
-  int n = m_MeanInOverlaps.cols();
+  const unsigned int n = m_MeanInOverlaps.cols();
 
   // Temporary matrices H, K, L
   RealMatrixType H(n,n,0), K(n,n,0), L(n,n,0);
@@ -179,7 +179,7 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
   CheckInputs();
 
   // Number of images
-  int n = m_MeanInOverlaps.cols();
+  const unsigned int n = m_MeanInOverlaps.cols();
 
   // Objective function
   RealMatrixType Q = GetQuadraticObjectiveMatrix();
@@ -195,7 +195,7 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
     }
 
   RealVectorType x(n,1);
-  bool           solv =  vnl_solve_qp_with_non_neg_constraints(Q,g,A,b,x);
+  bool solv = vnl_solve_qp_with_non_neg_constraints(Q,g,A,b,x);
   if (solv)
     {
     m_OutputCorrectionModel = RealVectorType(x);
