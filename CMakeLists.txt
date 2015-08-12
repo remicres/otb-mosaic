@@ -1,3 +1,2 @@
 project(Mosaic)
-set(Mosaic_LIBRARIES Mosaic)
 otb_module_impl()
