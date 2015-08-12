@@ -84,7 +84,7 @@ StreamingLargeFeatherMosaicFilter<TInputImage, TOutputImage, TDistanceImage, TIn
         interpolatedPixel = interp[i]->Evaluate(geoPoint);
 
         // Check that interpolated pixel is not empty
-        if (IsPixelNotEmpty(interpolatedPixel) )
+        if (Superclass::IsPixelNotEmpty(interpolatedPixel) )
           {
           // Get the alpha channel pixel value for this channel
           if (distanceInterpolator[i]->IsInsideBuffer(geoPoint) )

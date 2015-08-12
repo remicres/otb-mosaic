@@ -58,7 +58,7 @@ StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
   // Instanciate interpolators
   InputImageType *        currentImage[nbOfUsedInputImages];
   InterpolatorPointerType interps[nbOfUsedInputImages];
-  PrepareImageAccessors(currentImage, interps);
+  Superclass::PrepareImageAccessors(currentImage, interps);
 
   // temporary variables
   OutputImagePointType geoPoint;

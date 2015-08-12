@@ -88,7 +88,7 @@ StreamingFeatherMosaicFilter<TInputImage, TOutputImage, TDistanceImage, TInterna
         interpolatedPixel = interp[i]->Evaluate(geoPoint);
 
         // Check that interpolated pixel is not empty
-        if (IsPixelNotEmpty(interpolatedPixel) )
+        if (Superclass::IsPixelNotEmpty(interpolatedPixel) )
           {
 
           // Geographical point (current pixel) --> Continuous index (from

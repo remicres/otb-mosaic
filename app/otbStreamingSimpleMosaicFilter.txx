@@ -40,7 +40,7 @@ StreamingSimpleMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
   // copy the m_interpolator)
   InterpolatorPointerType interps[nbOfUsedInputImages];
   InputImageType *        currentImage[nbOfUsedInputImages];
-  PrepareImageAccessors(currentImage, interps);
+  Superclass::PrepareImageAccessors(currentImage, interps);
 
   // Container for geo coordinates
   OutputImagePointType geoPoint;
@@ -69,7 +69,7 @@ StreamingSimpleMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
         InputImagePixelType interpolatedPixel = interps[i]->Evaluate(geoPoint);
 
         // Check that interpolated pixel is not empty
-        if (IsPixelNotEmpty(interpolatedPixel) )
+        if (Superclass::IsPixelNotEmpty(interpolatedPixel) )
           {
           // Update the output pixel
           for (unsigned int band = 0 ; band < nBands ; band++)
