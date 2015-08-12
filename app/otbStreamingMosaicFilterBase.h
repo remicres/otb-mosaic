@@ -235,7 +235,7 @@ private:
 } // end namespace itk
 
 #ifndef OTB_MANUAL_INSTANTIATION
-#include "otbStreamingMosaicFilterBase.hxx"
+#include "otbStreamingMosaicFilterBase.txx"
 #endif
 
 #endif

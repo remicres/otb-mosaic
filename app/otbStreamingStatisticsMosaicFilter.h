@@ -239,7 +239,7 @@ private:
 } // end namespace otb
 
 #ifndef OTB_MANUAL_INSTANTIATION
-#include "otbStreamingStatisticsMosaicFilter.hxx"
+#include "otbStreamingStatisticsMosaicFilter.txx"
 #endif
 
 #endif

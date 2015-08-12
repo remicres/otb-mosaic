@@ -89,7 +89,7 @@ private:
 }
 
 #ifndef OTB_MANUAL_INSTANTIATION
-#include "otbSummingFilter.hxx"
+#include "otbSummingFilter.txx"
 #endif
 
 #endif

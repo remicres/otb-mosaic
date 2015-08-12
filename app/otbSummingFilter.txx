@@ -1,5 +1,5 @@
-#ifndef __SummingFilter_hxx
-#define __SummingFilter_hxx
+#ifndef __SummingFilter.txx
+#define __SummingFilter.txx
 
 #include "otbSummingFilter.h"
 #include "itkImageRegionIterator.h"

@@ -104,7 +104,7 @@ protected:
 } // end namespace otb
 
 #ifndef OTB_MANUAL_INSTANTIATION
-#include "otbStreamingLargeFeatherMosaicFilter.hxx"
+#include "otbStreamingLargeFeatherMosaicFilter.txx"
 #endif
 
 #endif

@@ -74,7 +74,7 @@ private:
 } // end namespace otb
 
 #ifndef OTB_MANUAL_INSTANTIATION
-#include "otbStreamingSimpleMosaicFilter.hxx"
+#include "otbStreamingSimpleMosaicFilter.txx"
 #endif
 
 #endif
