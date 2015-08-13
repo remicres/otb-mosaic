@@ -299,8 +299,8 @@ public:
   typedef otb::VectorImageToAmplitudeImageFilter<FloatVectorImageType, FloatImageType> VectorImageToAmplitudeFilterType;
   typedef itk::BinaryThresholdImageFilter<FloatImageType, UInt8MaskImageType>          ImageThresholdFilterType;
 
-  /* Alpha channel writer typedef */
-  typedef otb::ImageFileReader<DoubleImageType> AlphaReaderType;
+  /* Distance map image writer typedef */
+  typedef otb::ImageFileReader<DoubleImageType> DistanceMapImageReaderType;
 
   /* Vector data filters typedefs */
   typedef otb::VectorDataIntoImageProjectionFilter<VectorDataType,
@@ -626,6 +626,7 @@ private:
     SetDocSeeAlso(" ");
 
     AddDocTag(Tags::Manip);
+    AddDocTag(Tags::Raster);
 
     // Input image
     AddParameter(ParameterType_InputImageList,  "il",   "Input Images");
@@ -732,11 +733,11 @@ private:
     SetParameterDescription("tmpdir","Temporary directory storing masks");
     MandatoryOff("tmpdir");
 
-    AddParameter(ParameterType_Group, "alphamasks", "Alpha masks computation");
-    AddParameter(ParameterType_Float, "alphamasks.spacing", "Alpha masks spacing, in multiple of the corresponding input image spacing");
-    SetParameterDescription("alphamasks.spacing",
-                            "Can be increased if input images are too big, or in order to speed up the process");
-    SetDefaultParameterFloat("alphamasks.spacing", 10);
+    AddParameter(ParameterType_Group, "distancemap", "Distance map images computation");
+    AddParameter(ParameterType_Float, "distancemap.sr", "Distance map images sampling ratio");
+    SetParameterDescription("distancemap.sr",
+                            "Can be increased if input images are too big to fit the RAM, or in order to speed up the process");
+    SetDefaultParameterFloat("distancemap.sr", 10);
 
     AddRAMParameter();
 
@@ -906,7 +907,7 @@ private:
     string temporaryFileName = GenerateFileName("tmp_binary_rasterized_mask", 0);
 
     // Write a binary mask
-    RasterizeBinaryMask(vd, image, temporaryFileName, m_AlphaMasksSpacingMultiplicator);
+    RasterizeBinaryMask(vd, image, temporaryFileName, m_DistanceMapImageSamplingRatio);
 
     // Create distance image
     WriteDistanceImage(temporaryFileName, outputFileName);
@@ -926,7 +927,7 @@ private:
     string temporaryFileName = GenerateFileName("tmp_binary_mask", 0);
 
     // Write a temporary binary mask
-    WriteBinaryMask(image, temporaryFileName, m_AlphaMasksSpacingMultiplicator);
+    WriteBinaryMask(image, temporaryFileName, m_DistanceMapImageSamplingRatio);
 
     // Create distance image
     WriteDistanceImage(temporaryFileName, outputFileName);
@@ -1087,7 +1088,7 @@ private:
   {
 	  filter->UpdateOutputInformation();
 	  typename TMosaicFilterType::OutputImageSpacingType spacing = filter->GetOutputSpacing();
-	  float multiplicator = GetParameterFloat("alphamasks.spacing");
+	  float multiplicator = GetParameterFloat("distancemap.sr");
 	  float maxSpacing = vnl_math_max(multiplicator*vnl_math_abs(spacing[0]),
 			  multiplicator*vnl_math_abs(spacing[1]));
 	  filter->SetDistanceOffset(maxSpacing);
@@ -1127,7 +1128,7 @@ private:
       m_TempDirectory = temp.native();
       }
     otbAppLogINFO(<<"Temporary directory is:"<<m_TempDirectory);
-    m_AlphaMasksSpacingMultiplicator = GetParameterFloat("alphamasks.spacing");
+    m_DistanceMapImageSamplingRatio = GetParameterFloat("distancemap.sr");
 
     /////////////////////////////////////////////////////////////
     //				 Compute stats (if needed)
@@ -1234,8 +1235,8 @@ private:
 
     if (GetParameterInt("comp.feather")==Composition_Method_none)
       {
-      // No need for alpha masks
-      otbAppLogINFO("Composition method is set to none. Skipping alpha masks. (No cutline will be used)");
+      // No need for distance map images
+      otbAppLogINFO("Composition method is set to none. Skipping distance map images computation.");
 
       // Use a simple mosaic filter
       if (this->GetParameterInt("harmo.method")==Harmonisation_Method_rgb)
@@ -1268,7 +1269,7 @@ private:
     else
       {
       // Compute distance images
-      otbAppLogINFO("Computing alpha masks... ");
+      otbAppLogINFO("Computing distance map images... ");
       distanceImageFileNameList.clear();
       for (unsigned int i = 0 ; i < nImages ; i++)
         {
@@ -1285,8 +1286,8 @@ private:
         distanceImageFileNameList.push_back(outputFileName);
         }
 
-      // Create alpha masks reader array
-      m_AlphaReader = CreateReaderArray<AlphaReaderType>(distanceImageFileNameList);
+      // Create distance map images readers array
+      m_DistanceMapImageReader = CreateReaderArray<DistanceMapImageReaderType>(distanceImageFileNameList);
 
       // Instanciate the mosaic filter depending the harmonization mode chosen
       if (this->GetParameterInt("harmo.method")==Harmonisation_Method_rgb)
@@ -1300,15 +1301,15 @@ private:
         if (GetParameterInt("comp.feather")==Composition_Method_large)
           {
           m_largeFeatherMosaicFilter = CreateConnectedMosaicFilter<LargeFeatherMosaicFilterType,
-                                                                   RGB2LABFilterType, AlphaReaderType>(m_rgb2labFilter,
-                                                                                                       m_AlphaReader);
+                                                                   RGB2LABFilterType, DistanceMapImageReaderType>(m_rgb2labFilter,
+                                                                                                       m_DistanceMapImageReader);
           m_lab2rgbFilter->SetInput(m_largeFeatherMosaicFilter->GetOutput() );
           }
         else if (GetParameterInt("comp.feather")==Composition_Method_slim)
           {
           m_smallFeatherMosaicFilter = CreateConnectedMosaicFilter<SlimFeatherMosaicFilterType,
-                                                                RGB2LABFilterType, AlphaReaderType>(m_rgb2labFilter,
-                                                                                                    m_AlphaReader);
+                                                                RGB2LABFilterType, DistanceMapImageReaderType>(m_rgb2labFilter,
+                                                                                                    m_DistanceMapImageReader);
           m_lab2rgbFilter->SetInput(m_smallFeatherMosaicFilter->GetOutput() );
           }
         }
@@ -1319,13 +1320,13 @@ private:
         if (GetParameterInt("comp.feather")==Composition_Method_large)
           {
           m_largeFeatherMosaicFilter = CreateConnectedMosaicFilterToInputs<LargeFeatherMosaicFilterType,
-                                                                           AlphaReaderType>(m_AlphaReader);
+                                                                           DistanceMapImageReaderType>(m_DistanceMapImageReader);
           SetParameterOutputImage("out", m_largeFeatherMosaicFilter->GetOutput() );
           }
         else if (GetParameterInt("comp.feather")==Composition_Method_slim)
           {
           m_smallFeatherMosaicFilter = CreateConnectedMosaicFilterToInputs<SlimFeatherMosaicFilterType,
-                                                                        AlphaReaderType>(m_AlphaReader);
+                                                                        DistanceMapImageReaderType>(m_DistanceMapImageReader);
           SetParameterOutputImage("out", m_smallFeatherMosaicFilter->GetOutput() );
           }
         }
@@ -1369,14 +1370,14 @@ private:
   // mask image filters
   vector<MaskImageFilterType::Pointer> m_MaskImageFilter;
   vector<MaskReaderType::Pointer> m_MaskReaderForStats;
-  vector<AlphaReaderType::Pointer> m_AlphaReader;
+  vector<DistanceMapImageReaderType::Pointer> m_DistanceMapImageReader;
 
   // Parameters
   string m_TempDirectory; // Temp. directory
   vector<string> distanceImageFileNameList;
   vector<string> masksForStatsFileNameList;
 
-  double m_AlphaMasksSpacingMultiplicator; // Alpha masks spacing
+  double m_DistanceMapImageSamplingRatio;
 
 };
 }
