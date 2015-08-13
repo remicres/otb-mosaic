@@ -17,7 +17,7 @@ namespace otb
  * The behavior of the filter is to put layers in the same order
  * as they are in input
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage=TInputImage, class TInternalValueType=double>
 class ITK_EXPORT StreamingSimpleMosaicFilter : public otb::StreamingMosaicFilterBase<TInputImage, TOutputImage,

@@ -22,7 +22,7 @@ namespace otb
  *
  * Support streaming
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage, class TDistanceImage, class TInternalValueType=double>
 class ITK_EXPORT StreamingMosaicFilterWithBlendingBase : public otb::StreamingMosaicFilterBase<TInputImage,

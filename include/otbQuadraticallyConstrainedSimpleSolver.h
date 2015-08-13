@@ -9,7 +9,8 @@
 namespace otb {
 
 /**
- * Solves the optimisation problem for radiometric harmonisation of multiple
+ * \class QuadraticallyConstrainedSimpleSolver
+ * \brief Solves the optimisation problem for radiometric harmonisation of multiple
  * overlapping images.
  *
  * This solver inputs statistics of the overlapping images, and produces a
@@ -23,7 +24,7 @@ namespace otb {
  * -N x N Matrix of area of overlaps ij
  * -N x N Matrix of mean of pixels products of overlaps ij
  *
- * For all i and j, m_{ij} = stuff of image i in overlap ij
+ * For all i and j, m_{ij} = stats of image i in overlap ij
  *
  * Output:
  * N x 1 Vector of scales to apply to images
@@ -34,6 +35,8 @@ namespace otb {
  *
  *  http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7154397&filter%3DAND%28p_IS_Number%3A4609444%29
  *
+ *
+ * \ingroup OTBMosaic
  */
 
 template<class ValueType>

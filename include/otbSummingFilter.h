@@ -6,14 +6,14 @@
 namespace otb
 {
 /** \class SummingFilter
- * \brief Computes the sum to the input images pixels
+ * \brief Computes the sum of the input images pixels
  *
  * Support streaming
  *
  * The pixels must support the operator ==, +, /, etc.
  * The "no data value" can be chose.
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage>
 class ITK_EXPORT SummingFilter : public itk::ImageToImageFilter<TInputImage, TOutputImage>

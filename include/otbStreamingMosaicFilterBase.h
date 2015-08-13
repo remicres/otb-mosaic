@@ -22,7 +22,7 @@ namespace otb
  * can be set using the method between brackets.
  *
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  *
  **/
 

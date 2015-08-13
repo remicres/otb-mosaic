@@ -21,7 +21,7 @@ namespace otb
  * X one of these matrices, then X\{ij} is the statistic of the image
  * i in the overlapping area with the image j.
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage=TInputImage, class TInternalValueType=double>
 class ITK_EXPORT StreamingStatisticsMosaicFilter : public otb::StreamingMosaicFilterBase<TInputImage, TOutputImage,

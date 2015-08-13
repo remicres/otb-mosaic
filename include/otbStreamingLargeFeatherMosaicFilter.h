@@ -22,7 +22,7 @@ namespace otb
  * TODO:
  * -maybe change containers from std::vector to itk::something?
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage, class TDistanceImage, class TInternalValueType=double>
 class ITK_EXPORT StreamingLargeFeatherMosaicFilter :

@@ -17,11 +17,19 @@ namespace otb
 {
 
 /** \class StreamingMultibandFeatherMosaicFilter
- * \brief Computes a nice seamless mosaic with no ghosting effect
+ * \brief Computes a nice seamless mosaic using multiband strategy
+ *
+ * The filter implements the multiband blending strategy. Laplacian
+ * of input images is computed, then each frequency is mosaiced using
+ * a StreamingFeatherMosaicFilter. Finaly the summing of all frequencies
+ * is performed to get the final mosaic image.
  *
  * Mandatory inputs : images to mosaic + alpha channels
  *
  * Output: nice mosaic
+ *
+ * \ingroup OTBMosaic
+ *
  */
 template <class TInputImage, class TOutputImage, class TDistanceImage>
 class ITK_EXPORT StreamingMultibandFeatherMosaicFilter : public otb::StreamingFeatherMosaicFilter<TInputImage,

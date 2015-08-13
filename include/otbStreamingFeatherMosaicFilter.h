@@ -9,6 +9,7 @@ namespace otb
 /** \class StreamingFeatherMosaicFilter
  * \brief Computes the mosaic of an input images set using
  * feathering technique. The output is a nice seamless mosaic.
+ *
  * Images are added-weighted in a one-by-one fashion, blended
  * from the images boundaries to a specified transition distance.
  * The smoothness of the transition curve can be set (exponent).
@@ -26,7 +27,7 @@ namespace otb
  * -move container class to private
  * -create accessors
  *
- * \ingroup Multithreaded
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage, class TDistanceImage, class TInternalValueType=double>
 class ITK_EXPORT StreamingFeatherMosaicFilter :

@@ -7,52 +7,59 @@ Mosaic
 ----------------------------
 This application computes mosaics of images. 
 
-*Input images can be mosaicked in 3 possible ways:
-1.Using a simple compositing technique which copies the last image
-over earlier ones in areas of overlap
-2.Using a feathering technique, which blends all images on the maximum 
+Compositing methods:
+  1.Simple compositing technique (-comp.feather none) which copies the last image
+over earlier ones in areas of overlap (Default)
+  2.Feathering technique (-comp.feather large), which blends all images on the maximum 
 overlapping areas (this produces seamless mosaics, but can cause blur
 effect where images are not perfectly aligned).
-3.Using a feathering technique, which blends the last image over earlier 
+  3.Feathering technique (-comp.feather slim), which blends the last image over earlier 
 ones in areas of overlap, on a given transition distance (seam can be visible
 from a certain zoom level, but it does not cause blur effect when images are
 not perfectly aligned)
 
-For performance issues, alpha masks spacing (used by feathering techniques)
-can be multiplied to speed up the process (alphamasks.spacing>>1), or have
-a nicer blending (alphamasks.spacing equal to 1). Indeed, alpha masks are
-computed before the compositing, using a non streamable filter.
-That's why in certain cases (big images), we have to reduce the alpha masks
-images size by multiplying its spacing.
-Alpha masks are temporary stored in the given temporary directory (default is
-system directory).
+Feathering compositing methods performance tuning:
+  For performance issues, distance map images (used by feathering methods)
+size can be reduced. Indeed, distance map images are computed into a temporary
+file before the compositing process, because it couldn't be done in a streamable
+way. That is, the RAM must be enough to compute the entire distance map image
+from every single input image. Thus, the application provides an option to
+reduce the size of the distance map images, by multiplying the original spacing
+of images. Setting -alphamasks.spacing 10 will induce a 0.1x wider distance
+map image. To keep the original input size, just set -alphamasks.spacing 1.0.
+Default distance map images size reduction ratio is 10.
+Distance map images are temporary stored in the given temporary directory
+(-tmpdir). Default is system directory.
 
-*Interpolator can be changed (Nearest Neighborhood, Linear, Bicubic)
-*Output spacing can be chosen too.
+Interpolator:
+Supported interpolators:
+  Nearest Neighborhood (Default)
+  Bicubic
+  Linear
 
-*Input images dynamic can be managed using 3 possible methods:
-1.Keep the original dynamic of images (fastest)
-2.Band-by-band harmonization: minimize a cost function based on images 
+Output spacing of the output mosaic can be changed using -output.spacing
+
+Input images dynamic harmonization:
+  None (Default)
+  Band-by-band harmonization: minimize a cost function based on images 
 statistics in overlapping areas, for each band independently.
-3.True color harmonization: minimize a cost function based on images 
+  True color harmonization: minimize a cost function based on images 
 statistics in overlapping areas, in a decorreleted color space suitable
 for true color processing (works only on true color images, i.e. RGB).
-Only the first 3 bands are processed by this method.
+Only the first 3 bands are processed by this method. More information 
+about the rvb method can be found in the paper "Natural Color Satellite
+Image Mosaicking Using Quadratic Programming in Decorrelated Color Space"
+Cresson & Saint-Geours, July 2015, IEEE JSTARS Volume PP Issue 99
 
-More information about the rvb method can be found in the paper
-"Natural Color Satellite Image Mosaicking Using Quadratic Programming
-in Decorrelated Color Space" Cresson & Saint-Geours, July 2015, IEEE
-JSTART Volume PP Issue 99
+Input images dynamic harmonization cost functions:
+  rmse: Root mean squared error based cost function
+  musig: Mean and Standard deviation based cost function
+  mu: Mean based cost function
 
-Remarks:
--For methods 2 and 3, images statistics has to be computed
--For methods 2 and 3, cost function can be chosen (rmse based, mean based,
-mean and std based)
-
-*Two kind of vector data can additionaly feed the process:
-1.For statistics computation (e.g. to mask clouds or water)
-2.For cutline selection
-
+Input vector data can additionaly feed the process (need one vector data 
+for one input image, in the same order as appearing in input):
+  For statistics computation, e.g. to mask clouds or water (-vdstats)
+  For cutline selection (-vdcut)
 
 
 Licence
