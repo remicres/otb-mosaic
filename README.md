@@ -32,9 +32,6 @@ reduce the size of the distance map images.
 Setting -distancemap.sr 10 will induce a 0.1x wider distance map image, and
 will save 100x less RAM. To keep the original input size, just set 
 -alphamasks.spacing 1.0 (Default distance map images size reduction ratio is 10.)
-###Distance map images temporary location (-tmpdir)###
-Distance map images are temporary stored in the given temporary directory
-(Default is system directory).
 
 ##Interpolator##
 Supported interpolators are
@@ -83,6 +80,10 @@ for one input image, in the same order as appearing in input):
 Input vector data can additionaly feed the process for statistics computation, 
 e.g. to mask clouds or water using -vdstats.
 One vector data is required for each input image, and must appear in the same order.
+
+#Temporary files location (-tmpdir)#
+Distance map images, and binary masks are temporary stored in the given temporary
+directory (Default is system directory).
 
 Licence
 =======
