@@ -1145,17 +1145,17 @@ private:
 
         // Write binary masks used for statistics computation
         otbAppLogINFO("Computing masks for statistics... ");
-        masksForStatsFileNameList.clear();
+        binaryMaskForStatsFileNameList.clear();
         for (unsigned int i = 0 ; i < nMasks ; i++)
           {
           string outputFileName = GenerateFileName("tmp_binary_mask_for_stats", i);
           RasterizeBinaryMask(statsVectorDataList->GetNthElement(i),
                               imagesList->GetNthElement(i), outputFileName, 1.0, true);
-          masksForStatsFileNameList.push_back( outputFileName );
+          binaryMaskForStatsFileNameList.push_back( outputFileName );
           }
 
         // Create stats masks reader array
-        m_MaskReaderForStats = CreateReaderArray<MaskReaderType>(masksForStatsFileNameList);
+        m_MaskReaderForStats = CreateReaderArray<MaskReaderType>(binaryMaskForStatsFileNameList);
 
         if (this->GetParameterInt("harmo.method")==Harmonisation_Method_rgb)
           {
@@ -1165,7 +1165,7 @@ private:
           m_rgb2labFilter = CreateConnectedFilterArrayToInputs<RGB2LABFilterType>();
 
           // maskImageFilter array
-          m_MaskImageFilter =  CreateConnectedFilterArray<RGB2LABFilterType,MaskReaderType, MaskImageFilterType>(
+          m_MaskImageFilterForStats =  CreateConnectedFilterArray<RGB2LABFilterType,MaskReaderType, MaskImageFilterType>(
               m_rgb2labFilter, m_MaskReaderForStats);
 
           }
@@ -1174,7 +1174,7 @@ private:
           otbAppLogINFO("Computing statistics in the radiometric color space");
 
           // maskImageFilter array
-          m_MaskImageFilter =  CreateConnectedFilterArrayToInput<MaskReaderType, MaskImageFilterType>(
+          m_MaskImageFilterForStats =  CreateConnectedFilterArrayToInput<MaskReaderType, MaskImageFilterType>(
               m_MaskReaderForStats);
           }
         else
@@ -1183,7 +1183,7 @@ private:
           }
 
         // maskImageFilter-->statsFilter
-        m_StatsFilter = CreateConnectedMosaicFilter<StatisticsMosaicFilterType,MaskImageFilterType>(m_MaskImageFilter);
+        m_StatsFilter = CreateConnectedMosaicFilter<StatisticsMosaicFilterType,MaskImageFilterType>(m_MaskImageFilterForStats);
         }
       else // no input mask
         {
@@ -1235,17 +1235,50 @@ private:
 
     if (GetParameterInt("comp.feather")==Composition_Method_none)
       {
-      // No need for distance map images
+      // Use a simple filter. No need for distance map images
       otbAppLogINFO("Composition method is set to none. Skipping distance map images computation.");
 
-      // Use a simple mosaic filter
+      // Compute binary masks for cutline, if any
+      if (nCutline != 0)
+        {
+        otbAppLogINFO("Computing masks images for cutline... ");
+        binaryMaskForCutlineFileNameList.clear();
+
+        // Compute each binary mask
+        for (unsigned int i = 0 ; i < nImages ; i++)
+          {
+          string outputFileName = GenerateFileName("tmp_cutline_image", i);
+          RasterizeBinaryMask(cutVectorDataList->GetNthElement(i),
+              imagesList->GetNthElement(i), outputFileName, 1.0, true);
+          binaryMaskForCutlineFileNameList.push_back(outputFileName);
+          }
+
+        // Set masks readers
+        m_MaskReaderForCutline = CreateReaderArray<MaskReaderType>(binaryMaskForCutlineFileNameList);
+        }
+
+      // Check color space
       if (this->GetParameterInt("harmo.method")==Harmonisation_Method_rgb)
         {
         otbAppLogINFO("Performing simple composition method in rgb color space");
 
-        // Filter input: rgb2lab filter array
-        m_simpleMosaicFilter = CreateConnectedMosaicFilter<SimpleMosaicFilterType,
-                                                           RGB2LABFilterType>(m_rgb2labFilter);
+        // Mask if needed
+        if (nCutline != 0)
+          {
+          // Connect masks readers to maskfilters
+          m_MaskImageFilterForCutline =  CreateConnectedFilterArray<RGB2LABFilterType,MaskReaderType, MaskImageFilterType>(
+              m_rgb2labFilter, m_MaskReaderForCutline);
+
+          // Filter input: imagemaskfilters array
+          m_simpleMosaicFilter = CreateConnectedMosaicFilter<SimpleMosaicFilterType,
+              MaskImageFilterType>(m_MaskImageFilterForCutline);
+          }
+        else
+          {
+          // Filter input: rgb2lab filter array
+          m_simpleMosaicFilter = CreateConnectedMosaicFilter<SimpleMosaicFilterType,
+              RGB2LABFilterType>(m_rgb2labFilter);
+          }
 
         // Filter output: lab2rgb filter array
         m_lab2rgbFilter = LAB2RGBFilterType::New();
@@ -1258,8 +1291,23 @@ private:
         {
         otbAppLogINFO("Performing simple composition method in radiometric color space");
 
-        // Filter input: Inputs
-        m_simpleMosaicFilter = CreateConnectedMosaicFilterToInputs<SimpleMosaicFilterType>();
+        // Mask if needed
+        if (nCutline != 0)
+          {
+          // Connect masks readers to maskfilters
+          m_MaskImageFilterForCutline =  CreateConnectedFilterArrayToInput<MaskReaderType, MaskImageFilterType>(
+              m_MaskReaderForCutline);
+
+          // Filter input: imagemaskfilters array
+          m_simpleMosaicFilter = CreateConnectedMosaicFilter<SimpleMosaicFilterType,
+              MaskImageFilterType>(m_MaskImageFilterForCutline);
+          }
+        else
+          {
+          // Filter input: Inputs
+          m_simpleMosaicFilter = CreateConnectedMosaicFilterToInputs<SimpleMosaicFilterType>();
+          }
+
 
         // Filter output: Outputs
         SetParameterOutputImage("out", m_simpleMosaicFilter->GetOutput() );
@@ -1353,7 +1401,8 @@ private:
   {
     otbAppLogINFO("Clean temporary files");
     deleteFiles(distanceImageFileNameList);
-    deleteFiles(masksForStatsFileNameList);
+    deleteFiles(binaryMaskForStatsFileNameList);
+    deleteFiles(binaryMaskForCutlineFileNameList);
     otbAppLogINFO("Done");
   }
 
@@ -1368,14 +1417,17 @@ private:
   LAB2RGBFilterType::Pointer m_lab2rgbFilter;
 
   // mask image filters
-  vector<MaskImageFilterType::Pointer> m_MaskImageFilter;
+  vector<MaskImageFilterType::Pointer> m_MaskImageFilterForStats;
   vector<MaskReaderType::Pointer> m_MaskReaderForStats;
+  vector<MaskImageFilterType::Pointer> m_MaskImageFilterForCutline;
+  vector<MaskReaderType::Pointer> m_MaskReaderForCutline;
   vector<DistanceMapImageReaderType::Pointer> m_DistanceMapImageReader;
 
   // Parameters
   string m_TempDirectory; // Temp. directory
   vector<string> distanceImageFileNameList;
-  vector<string> masksForStatsFileNameList;
+  vector<string> binaryMaskForStatsFileNameList;
+  vector<string> binaryMaskForCutlineFileNameList;
 
   double m_DistanceMapImageSamplingRatio;
 
