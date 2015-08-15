@@ -1125,7 +1125,7 @@ private:
     if (m_TempDirectory.empty())
       {
       boost::filesystem::path temp = boost::filesystem::temp_directory_path();
-      m_TempDirectory = temp.native();
+      m_TempDirectory = temp.string(); //temp.native();
       }
     otbAppLogINFO(<<"Temporary directory is:"<<m_TempDirectory);
     m_DistanceMapImageSamplingRatio = GetParameterFloat("distancemap.sr");
