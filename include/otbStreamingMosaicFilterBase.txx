@@ -161,34 +161,30 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
 ::CheckShiftScaleMatrices()
 {
 
-  unsigned int shiftMatrixCols = m_ShiftMatrix.cols();
-  unsigned int scaleMatrixCols = m_ScaleMatrix.cols();
-  unsigned int shiftMatrixRows = m_ShiftMatrix.rows();
-  unsigned int scaleMatrixRows = m_ScaleMatrix.rows();
-  unsigned int numberOfInputImages = this->GetNumberOfInputImages();
+  const unsigned int numberOfInputImages = this->GetNumberOfInputImages();
 
   // Check shift-scale matrix dimensions
   if (m_ShiftScaleInputImages)
     {
-    if (shiftMatrixRows == 0)
+    if (m_ShiftMatrix.rows() == 0)
       {
       m_ShiftMatrix.set_size(numberOfInputImages, nbOfBands);
       m_ShiftMatrix.fill(itk::NumericTraits<InternalValueType>::Zero);
       }
-    if (scaleMatrixRows == 0)
+    if (m_ScaleMatrix.rows() == 0)
       {
       m_ScaleMatrix.set_size(numberOfInputImages, nbOfBands);
       m_ScaleMatrix.fill(itk::NumericTraits<InternalValueType>::One);
       }
-    if(shiftMatrixCols != nbOfBands || scaleMatrixCols != nbOfBands)
+    if(m_ShiftMatrix.cols() != nbOfBands || m_ScaleMatrix.cols() != nbOfBands)
       {
       itkWarningMacro(<<"Shift-Scale matrices should have " << nbOfBands << " cols (1 col/band)"
-                      << " instead of " << shiftMatrixCols);
+                      << " instead of " << m_ShiftMatrix.cols());
       }
-    if(shiftMatrixRows != numberOfInputImages || scaleMatrixRows != numberOfInputImages)
+    if(m_ShiftMatrix.rows() != numberOfInputImages || m_ScaleMatrix.rows() != numberOfInputImages)
       {
       itkWarningMacro(<<"Shift-Scale matrices must have " << numberOfInputImages << " rows (1 row/input image)"
-                      << " instead of " << shiftMatrixRows);
+                      << " instead of " << m_ShiftMatrix.rows());
       }
     }
 }
