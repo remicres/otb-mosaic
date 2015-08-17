@@ -51,8 +51,8 @@
 // maths
 #include "vcl_complex.h"
 
-// temp filename
-#include <boost/filesystem.hpp>
+// system tools
+#include <itksys/SystemTools.hxx>
 
 using namespace std;
 
@@ -603,13 +603,7 @@ private:
   string GenerateFileName(string tag, int id)
   {
     // Create a filename
-    string outputFile;
-
-    if (m_TempDirectory.size() != 0)
-      {
-      outputFile += m_TempDirectory + "/";
-      }
-    outputFile += tag + "_" + SSTR(id) + ".tif";
+    string outputFile = m_TempFilesPrefix + "_" + tag + "_" + SSTR(id) + ".tif";
     return outputFile;
   }
 
@@ -729,8 +723,8 @@ private:
     MandatoryOff("output.spacing");
 
     // temp. dir
-    AddParameter(ParameterType_String, "tmpdir", "Temporary directory storing masks");
-    SetParameterDescription("tmpdir","Temporary directory storing masks");
+    AddParameter(ParameterType_Directory,"tmpdir","Directory where to write temporary files");
+    SetParameterDescription("tmpdir","This applications need to write temporary files for each image. This parameter allows choosing the path where to write those files. If disabled, the current path will be used.");
     MandatoryOff("tmpdir");
 
     AddParameter(ParameterType_Group, "distancemap", "Distance map images computation");
@@ -851,7 +845,7 @@ private:
     WriterType::Pointer writer = WriterType::New();
     writer->SetFileName(outputDistanceImageFileName);
     writer->SetInput(approximateSignedDistanceMapImageFilter->GetOutput() );
-    AddProcess(writer,"Writing distance image "+outputDistanceImageFileName);
+    AddProcess(writer,"Writing distance map image "+outputDistanceImageFileName);
     writer->Update();
 
   }
@@ -1120,14 +1114,25 @@ private:
                                                << ") should be equal to number of images (" << nImages << ")");
       }
 
-    // Get parameters
-    m_TempDirectory = GetParameterAsString("tmpdir");
-    if (m_TempDirectory.empty())
+    // Get output filename (without extension)
+    std::string outfname = GetParameterString("out");
+    std::string outbfname = itksys::SystemTools::GetFilenameWithoutExtension(outfname.c_str());
+
+    // Get specified temporary directory
+    std::string tmpdir = GetParameterAsString("tmpdir");
+    if (!tmpdir.empty())
       {
-      boost::filesystem::path temp = boost::filesystem::temp_directory_path();
-      m_TempDirectory = temp.string(); //temp.native();
+      // A temporary directory is specified: we check that it ends with a POSIX separator
+      if (tmpdir[tmpdir.size()-1] != '/')
+        {
+        // If not, we add the separator
+        tmpdir.append("/");
+        }
       }
-    otbAppLogINFO(<<"Temporary directory is:"<<m_TempDirectory);
+    m_TempFilesPrefix = tmpdir + outbfname;
+    otbAppLogINFO(<< "Temporary files prefix is:" << m_TempFilesPrefix);
+
+    // Get distance map image sampling ratio
     m_DistanceMapImageSamplingRatio = GetParameterFloat("distancemap.sr");
 
     /////////////////////////////////////////////////////////////
@@ -1424,7 +1429,7 @@ private:
   vector<DistanceMapImageReaderType::Pointer> m_DistanceMapImageReader;
 
   // Parameters
-  string m_TempDirectory; // Temp. directory
+  string m_TempFilesPrefix; // Temp. directory
   vector<string> distanceImageFileNameList;
   vector<string> binaryMaskForStatsFileNameList;
   vector<string> binaryMaskForCutlineFileNameList;
