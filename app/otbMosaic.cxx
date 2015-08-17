@@ -528,7 +528,7 @@ private:
     typename TMosaicFilterType::Pointer mosaicFilter = TMosaicFilterType::New();
     if (inputArray->Size() ==0)
       {
-      otbAppLogFATAL("ERROR (CreateConnectedMosaicFilterToInputs): Filter array have wrong number of elements");
+      otbAppLogFATAL("Filter array have wrong number of elements");
       }
     else
       {
@@ -555,7 +555,7 @@ private:
     typename TMosaicFilterType::Pointer mosaicFilter = TMosaicFilterType::New();
     if (inputArray->Size() != inputArray2.size() || inputArray2.size()==0)
       {
-      otbAppLogFATAL("ERROR (CreateConnectedMosaicFilterToInputs): Filter array have wrong number of elements");
+      otbAppLogFATAL("Filter array have wrong number of elements");
       }
     else
       {
@@ -664,7 +664,7 @@ private:
     SetMinimumParameterFloatValue("comp.feather.slim.exponent", 0);
     MandatoryOff("comp.feather.slim.exponent");
     // comp.feather.slim.lenght (i.e. blending lenght)
-    AddParameter(ParameterType_Float, "comp.feather.slim.lenght", "Transition lenght (In cartographic units)");
+    AddParameter(ParameterType_Float, "comp.feather.slim.lenght", "Transition length (In cartographic units)");
     MandatoryOn("comp.feather.slim.lenght");
     SetMinimumParameterFloatValue("comp.feather.slim.lenght", 0);
     MandatoryOff("comp.feather.slim.lenght");
@@ -965,7 +965,7 @@ private:
         otbAppLogINFO("Correction cost function: RMSE based cost function");
         break;
       default:
-        otbWarningMacro("Unknow correction cost function. Setting to RMSE");
+        otbWarningMacro("Unknown correction cost function. Setting to RMSE");
         solver->SetRMSEBased();
         break;
       }
@@ -1130,7 +1130,7 @@ private:
         }
       }
     m_TempFilesPrefix = tmpdir + outbfname;
-    otbAppLogINFO(<< "Temporary files prefix is:" << m_TempFilesPrefix);
+    otbAppLogINFO(<< "Temporary files prefix is: " << m_TempFilesPrefix);
 
     // Get distance map image sampling ratio
     m_DistanceMapImageSamplingRatio = GetParameterFloat("distancemap.sr");
@@ -1141,7 +1141,7 @@ private:
 
     if (this->GetParameterInt("harmo.method")==Harmonisation_Method_none)
       {
-      otbAppLogINFO("No harmonisation method is selected");
+      otbAppLogINFO("No harmonization method is selected");
       }
     else
       {
@@ -1235,7 +1235,7 @@ private:
       }
 
     /////////////////////////////////////////////////////////////
-    //				Instanciate the mosaic filters
+    //				Instantiate the mosaic filters
     /////////////////////////////////////////////////////////////
 
     if (GetParameterInt("comp.feather")==Composition_Method_none)
@@ -1342,7 +1342,7 @@ private:
       // Create distance map images readers array
       m_DistanceMapImageReader = CreateReaderArray<DistanceMapImageReaderType>(distanceImageFileNameList);
 
-      // Instanciate the mosaic filter depending the harmonization mode chosen
+      // Instantiate the mosaic filter depending the harmonization mode chosen
       if (this->GetParameterInt("harmo.method")==Harmonisation_Method_rgb)
         {
         otbAppLogINFO("Mosaic compositing in decorrelated color space");
@@ -1394,7 +1394,7 @@ private:
         ConfigureMosaicFilter<SlimFeatherMosaicFilterType>(m_smallFeatherMosaicFilter);
         ComputeDistanceOffset<SlimFeatherMosaicFilterType>(m_smallFeatherMosaicFilter);
 
-        // Set transition lenght and smoothness
+        // Set transition length and smoothness
         m_smallFeatherMosaicFilter->SetFeatheringTransitionDistance(GetParameterFloat("comp.feather.slim.lenght"));
         m_smallFeatherMosaicFilter->SetFeatheringSmoothness(GetParameterFloat("comp.feather.slim.exponent"));
         }
