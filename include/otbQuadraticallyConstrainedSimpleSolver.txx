@@ -44,12 +44,43 @@ template<class ValueType>
 void QuadraticallyConstrainedSimpleSolver<ValueType>
 ::CheckInputs() {
 
-  // Check matrices dimensions
-  assert(m_AreaInOverlaps.cols()==m_AreaInOverlaps.rows() );
-  assert(m_AreaInOverlaps.cols()==m_MeanInOverlaps.cols() );
-  assert(m_AreaInOverlaps.cols()==m_MeanInOverlaps.rows() );
-  assert(m_AreaInOverlaps.cols()==m_StandardDeviationInOverlaps.cols() );
-  assert(m_AreaInOverlaps.cols()==m_StandardDeviationInOverlaps.rows() );
+  // Check area matrix is non empty
+  const unsigned int n = m_AreaInOverlaps.cols();
+  if (n == 0)
+    {
+    itkExceptionMacro( << "Input area matrix has 0 elements");
+    }
+
+  bool inputMatricesAreValid = true;
+
+  // Check "areas" and "means" matrices size
+  if ((n != m_AreaInOverlaps.rows()) || (n != m_MeanInOverlaps.cols()) || (n != m_MeanInOverlaps.rows()))
+    {
+    inputMatricesAreValid = false;
+    }
+
+  // Check "std" matrix size
+  if ((oft == Cost_Function_musig) || (oft==Cost_Function_weighted_musig) || (oft==Cost_Function_rmse))
+    {
+    if ((n != m_StandardDeviationInOverlaps.cols()) || (n != m_StandardDeviationInOverlaps.rows()))
+      {
+      inputMatricesAreValid = false;
+      }
+    }
+
+  // Check "means of products" matrix size
+  if (oft == Cost_Function_musig)
+    {
+    if ((n != m_MeanOfProductsInOverlaps.cols()) || (n != m_MeanOfProductsInOverlaps.rows()))
+      {
+      inputMatricesAreValid = false;
+      }
+    }
+
+  if (!inputMatricesAreValid)
+    {
+    itkExceptionMacro( << "Input matrices must be square and have the same number of elements.");
+    }
 
   // Images layout topology Check (using Depth First Search)
   bool marked [m_AreaInOverlaps.rows()];
@@ -59,7 +90,11 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
   DFS(marked, 0);
   for (unsigned int i = 0 ; i < m_AreaInOverlaps.rows() ; i++)
     valid&=marked[i];
-  assert(valid);
+
+  if (!valid)
+    {
+    itkExceptionMacro( << "Inconsistent images layout: All images must be connected, at least with one overlap.")
+    }
 }
 
 /*
