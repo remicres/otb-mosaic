@@ -1,5 +1,5 @@
-#ifndef __StreamingMultibandFeatherMosaicFilter.txx
-#define __StreamingMultibandFeatherMosaicFilter.txx
+#ifndef __StreamingMultibandFeatherMosaicFilter_txx
+#define __StreamingMultibandFeatherMosaicFilter_txx
 
 #include "otbStreamingMultibandFeatherMosaicFilter.h"
 #include "itkProgressReporter.h"

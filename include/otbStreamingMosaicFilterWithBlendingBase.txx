@@ -1,5 +1,5 @@
-#ifndef __StreamingMosaicFilterWithBlendingBase.txx
-#define __StreamingMosaicFilterWithBlendingBase.txx
+#ifndef __StreamingMosaicFilterWithBlendingBase_txx
+#define __StreamingMosaicFilterWithBlendingBase_txx
 
 #include "otbStreamingMosaicFilterWithBlendingBase.h"
 

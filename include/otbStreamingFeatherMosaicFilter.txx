@@ -1,5 +1,5 @@
-#ifndef __StreamingFeatherMosaicFilter.txx
-#define __StreamingFeatherMosaicFilter.txx
+#ifndef __StreamingFeatherMosaicFilter_txx
+#define __StreamingFeatherMosaicFilter_txx
 
 #include "otbStreamingFeatherMosaicFilter.h"
 
