@@ -1,4 +1,5 @@
 #include "itkFixedArray.h"
+#include "itkObjectFactory.h"
 
 // Elevation handler
 #include "otbWrapperElevationParametersHandler.h"
