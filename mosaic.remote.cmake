@@ -2,5 +2,5 @@
 otb_fetch_module(Mosaic
   "images mosaicking"
   GIT_REPOSITORY https://github.com/remicres/otb-mosaic.git
-  GIT_TAG 383b4f0cace8d3fdb5283f6dae04201051c8f9d5
+  GIT_TAG 7e61737885f787db1a8ea7638a6a71448768e8c4
 )
