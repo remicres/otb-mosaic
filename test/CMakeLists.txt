@@ -3,7 +3,7 @@ otb_module_test()
 otb_test_application(NAME MosaicTestLargeFeathering
                       APP  Mosaic
                       OPTIONS -il ${INPUTDATA}/SP67_FR_subset_1.tif ${INPUTDATA}/SP67_FR_subset_2.tif 
-                              -out ${BASELINE}/apTvMosaicTestLargeFeathering.tif uint8 
+                              -out ${TEMP}/apTvMosaicTestLargeFeathering.tif uint8 
                               -comp.feather large
                       VALID   --compare-image ${EPSILON_8}
                               ${BASELINE}/apTvMosaicTestLargeFeathering.tif
@@ -13,7 +13,7 @@ otb_test_application(NAME MosaicTestLargeFeathering
 otb_test_application(NAME MosaicTestSlimFeathering
                       APP  Mosaic
                       OPTIONS -il ${INPUTDATA}/SP67_FR_subset_1.tif ${INPUTDATA}/SP67_FR_subset_2.tif 
-                              -out ${BASELINE}/apTvMosaicTestSlimFeathering.tif uint8 
+                              -out ${TEMP}/apTvMosaicTestSlimFeathering.tif uint8 
                               -comp.feather slim 
                               -comp.feather.slim.lenght 100
                       VALID   --compare-image ${EPSILON_8}
@@ -24,7 +24,7 @@ otb_test_application(NAME MosaicTestSlimFeathering
 otb_test_application(NAME MosaicTestSimpleWithHarmoBandRmse
                       APP  Mosaic
                       OPTIONS -il ${INPUTDATA}/SP67_FR_subset_1.tif ${INPUTDATA}/SP67_FR_subset_2.tif 
-                              -out ${BASELINE}/apTvMosaicTestSimpleWithHarmoBandRmse.tif uint8 
+                              -out ${TEMP}/apTvMosaicTestSimpleWithHarmoBandRmse.tif uint8 
                               -harmo.method band 
                               -harmo.cost rmse
                       VALID   --compare-image ${EPSILON_8}
@@ -34,7 +34,7 @@ otb_test_application(NAME MosaicTestSimpleWithHarmoBandRmse
 otb_test_application(NAME MosaicTestSimpleWithHarmoRgbRmse
                       APP  Mosaic
                       OPTIONS -il ${INPUTDATA}/SP67_FR_subset_1.tif ${INPUTDATA}/SP67_FR_subset_2.tif 
-                              -out ${BASELINE}/apTvMosaicTestSimpleWithHarmoRgbRmse.tif uint8 
+                              -out ${TEMP}/apTvMosaicTestSimpleWithHarmoRgbRmse.tif uint8 
                               -harmo.method rgb 
                               -harmo.cost rmse
                       VALID   --compare-image ${EPSILON_8}
@@ -44,7 +44,7 @@ otb_test_application(NAME MosaicTestSimpleWithHarmoRgbRmse
 otb_test_application(NAME MosaicTestSimpleWithCutline
                       APP  Mosaic
                       OPTIONS -il ${INPUTDATA}/SP67_FR_subset_1.tif ${INPUTDATA}/SP67_FR_subset_2.tif 
-                              -out ${BASELINE}/apTvMosaicTestSimpleWithCutline.tif uint8 
+                              -out ${TEMP}/apTvMosaicTestSimpleWithCutline.tif uint8 
                               -vdcut ${INPUTDATA}/SP67_FR_subset_1_cutline.shp ${INPUTDATA}/SP67_FR_subset_2_cutline.shp 
                       VALID   --compare-image ${EPSILON_8}
                               ${BASELINE}/apTvMosaicTestSimpleWithCutline.tif
@@ -53,7 +53,7 @@ otb_test_application(NAME MosaicTestSimpleWithCutline
 otb_test_application(NAME MosaicTestSimpleWithVdstats
                       APP  Mosaic
                       OPTIONS -il ${INPUTDATA}/SP67_FR_subset_1.tif ${INPUTDATA}/SP67_FR_subset_2.tif 
-                              -out ${BASELINE}/apTvMosaicTestSimpleWithVdstats.tif uint8 
+                              -out ${TEMP}/apTvMosaicTestSimpleWithVdstats.tif uint8 
                               -vdstats ${INPUTDATA}/SP67_FR_subset_1_cutline.shp ${INPUTDATA}/SP67_FR_subset_2_cutline.shp 
                       VALID   --compare-image ${EPSILON_8}
                               ${BASELINE}/apTvMosaicTestSimpleWithVdstats.tif
