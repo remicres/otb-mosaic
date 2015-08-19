@@ -1,6 +1,7 @@
 #ifndef QuadraticallyConstrainedSimpleSolver_H_
 #define QuadraticallyConstrainedSimpleSolver_H_
 
+#include "itkObjectFactory.h"
 #include "itkLightObject.h"
 #include "itkNumericTraits.h"
 #include <vnl/vnl_matrix.h>
