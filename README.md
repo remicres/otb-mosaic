@@ -44,7 +44,7 @@ Various cost function can be used for harmonization
 Input vector data can additionaly feed the process for statistics computation, e.g. to mask clouds or water, using __-vdstats__. One vector data is required for each input image, and must appear in the same order.
 
 ###Temporary files###
-Distance map images, and binary masks are temporary stored in the temporary directory specified by parameter __-tmpdir__ (Default is system directory).
+Distance map images, and binary masks are temporary stored in the temporary directory specified by parameter __-tmpdir__ (Default is application directory).
 
 Licence
 =======
