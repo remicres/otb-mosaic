@@ -32,7 +32,7 @@ Input vector data can additionaly feed the process for cutline selection using _
 ######Methods######
 * None (__-harmo.method none__): No harmonization. Images pixels values are untouched.(Default)
 * Band-by-band (__-harmo.method none__): Consists in minimizing a cost function based on images statistics in overlapping areas, for each band independently.
-* True color harmonization (__-harmo.method rgb__): Consists in minimizing a cost function based on images statistics in overlapping areas, in a decorreleted color space suitable for true color processing (works only on true color images, i.e. RGB). Only the first 3 bands are processed by this method. More information about the rvb method can be found in the paper "_Natural Color Satellite Image Mosaicking Using Quadratic Programming in Decorrelated Color Space_" Cresson & Saint-Geours, July 2015, IEEE JSTARS Volume PP Issue 99
+* True color harmonization (__-harmo.method rgb__): Consists in minimizing a cost function based on images statistics in overlapping areas, in a decorreleted color space suitable for true color processing (works only on true color images, i.e. RGB). Only the first 3 bands are processed by this method. More information about the rvb method can be found in the paper "_Natural Color Satellite Image Mosaicking Using Quadratic Programming in Decorrelated Color Space_" Cresson & Saint-Geours, July 2015, IEEE JSTARS Volume 8 Issue 8
 
 ######Cost function######
 Various cost function can be used for harmonization
