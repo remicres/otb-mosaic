@@ -48,6 +48,7 @@ MosaicFromDirectoryHandler<TOutputImage>
 
   // Instanciate a new mosaic filter
   mosaicFilter = MosaicFilterType::New();
+  mosaicFilter->SetGlobalWarningDisplay(false);
   readers.clear();
 
   // Browse the directory
