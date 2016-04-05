@@ -5,6 +5,9 @@
 #include "itkNearestNeighborInterpolateImageFunction.h"
 #include "otbStreamingTraits.h"
 
+// No data
+#include "otbNoDataHelper.h"
+
 namespace otb
 {
 /** \class StreamingMosaicFilterBase

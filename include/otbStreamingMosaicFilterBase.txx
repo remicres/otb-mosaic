@@ -344,6 +344,16 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
     m_NoDataInputPixel.Fill(itk::NumericTraits<InputImageInternalPixelType>::Zero);
     }
 
+  // Write no data flags
+  std::vector<bool> noDataValueAvailable;
+  std::vector<double> noDataValues1;
+  for (unsigned int band = 0 ; band < nbOfBands ; band++)
+    {
+    noDataValueAvailable.push_back(true);
+    noDataValues1.push_back(static_cast<double>(m_NoDataOutputPixel[band]));
+    }
+  otb::WriteNoDataFlags(noDataValueAvailable, noDataValues1, this->GetOutput()->GetMetaDataDictionary());
+
   // Get min & max values from output pixel type
   minOutputPixelValue =
     static_cast<InternalValueType>(itk::NumericTraits<OutputImageInternalPixelType>::NonpositiveMin() );
