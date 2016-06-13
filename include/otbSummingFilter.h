@@ -2,7 +2,7 @@
 #define __SummingFilter_H
 
 #include "itkImageToImageFilter.h"
-
+#include "itkImageRegionIterator.h"
 namespace otb
 {
 /** \class SummingFilter

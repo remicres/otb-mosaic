@@ -2,7 +2,7 @@
 #define __SummingFilter_txx
 
 #include "otbSummingFilter.h"
-#include "itkImageRegionIterator.h"
+#include "itkProgressReporter.h"
 
 namespace otb {
 
