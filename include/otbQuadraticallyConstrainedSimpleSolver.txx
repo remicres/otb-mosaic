@@ -100,15 +100,15 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
 /*
  * Compute the objective function
  *
- * VNL is not sufficent: it has weak solving routines, and can not solve a QP subject to
+ * VNL is not sufficient: it has weak solving routines, and can not deal with QP subject to
  * a linear equality constraint plus lower limits (that is < and = linear constraints)
  * With vnl, we keep it simple and solve only the zero-y intercept linear case
  * but sometimes it fails because numerical instabilities. (vnl quadratic routines are not very reliable)
  *
  * With a good quadratic solver, we could e.g. use a general linear model (Xout = Xin*a+b)
- * Unfortunately it can be done with VNL so far. Tested & implemented successfuly with
+ * Unfortunately it can be done with VNL so far. Tested & implemented successfully with
  * OOQP (Fastest, o(n)) and Quadprog++ (Fast, o(n)), and CGAL exact type solver (very slow, o(n^a) with a>1)
- * but has to rely on external dependancies...
+ * but has to rely on external dependencies...
  *
  * (see Cresson & St-Geours in IEEE JSTARS, "Natural color satellite image
  *  mosaicking using quadratic programming in decorrelated color space")
