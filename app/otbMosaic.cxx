@@ -628,18 +628,18 @@ private:
     SetParameterDescription("il", "Input images to mosaic");
 
     // Input vector data (cutline)
-    AddParameter(ParameterType_InputVectorDataList, "vdcut", "Input VectorDatas for composition");
+    AddParameter(ParameterType_InputVectorDataList, "vdcut", "Input VectorData for composition");
     SetParameterDescription("vdcut", "VectorData files to be used for cut input images");
     MandatoryOff("vdcut");
 
     // Input vector data (statistics masks)
-    AddParameter(ParameterType_InputVectorDataList, "vdstats", "Input VectorDatas for statistics");
+    AddParameter(ParameterType_InputVectorDataList, "vdstats", "Input VectorData for statistics");
     SetParameterDescription("vdstats", "VectorData files to be used for statistics computation (harmonization)");
     MandatoryOff("vdstats");
 
     // comp (compositing)
     AddParameter(ParameterType_Group,"comp","Mosaic compositing mode");
-    SetParameterDescription("comp","This group of parameters allow to set the mosaic compositing");
+    SetParameterDescription("comp","This group of parameters sets the mosaic compositing");
 
     // comp.feathering
     AddParameter(ParameterType_Choice,"comp.feather","Feathering method");
@@ -656,7 +656,7 @@ private:
                             "Blends all images on the maximum overlapping areas. May generate blur when inputs are not well aligned");
 
     // comp.feather.slim
-    AddChoice("comp.feather.slim","The fine blending composition mode");
+    AddChoice("comp.feather.slim","The slim blending composition mode");
     SetParameterDescription("comp.feather.slim",
                             "Blends the last image over earlier ones in areas of overlap, on a given transition distance");
     // comp.feather.slim.exponent (i.e. blending smoothness)
@@ -672,7 +672,7 @@ private:
 
     // harmo (harmonization)
     AddParameter(ParameterType_Group,"harmo","Spectral bands harmonization mode");
-    SetParameterDescription("harmo","This group of parameters allow to tune the mosaic harmonization behavior");
+    SetParameterDescription("harmo","This group of parameters tunes the mosaic harmonization");
 
     // harmo.method
     AddParameter(ParameterType_Choice,"harmo.method","harmonization method");
@@ -704,7 +704,7 @@ private:
     MandatoryOff("interpolator");
     AddChoice("interpolator.nn",     "Nearest Neighbor interpolation");
     SetParameterDescription("interpolator.nn",
-                            "Nearest neighbor interpolation leads to poor image quality, but it is very fast.");
+                            "Nearest neighbor interpolation leads to poor image quality, but it is fast.");
     AddChoice("interpolator.bco",    "Bicubic interpolation");
     AddParameter(ParameterType_Radius, "interpolator.bco.radius", "Radius for bicubic interpolation");
     SetParameterDescription("interpolator.bco.radius",
