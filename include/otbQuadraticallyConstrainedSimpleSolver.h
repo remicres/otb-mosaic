@@ -192,7 +192,7 @@ private:
 };
 
 } /* namespace otb */
-#ifndef otb_MANUAL_INSTANTIATION
+#ifndef OTB_MANUAL_INSTANTIATION
 #include "otbQuadraticallyConstrainedSimpleSolver.txx"
 #endif
 #endif /* QuadraticallyConstrainedSimpleSolver_H_ */

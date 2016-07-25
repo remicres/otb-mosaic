@@ -1,3 +1,6 @@
+#ifndef QuadraticallyConstrainedSimpleSolver_txx_
+#define QuadraticallyConstrainedSimpleSolver_txx_
+
 #include "otbQuadraticallyConstrainedSimpleSolver.h"
 
 namespace otb {
@@ -213,7 +216,7 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
 
   RealVectorType x(n,1);
   // Change tol. to 0.01 is a quick hack to avoid numerical instability...
-  bool solv = vnl_solve_qp_with_non_neg_constraints(Q,g,A,b,x,0.01); 
+  bool solv = vnl_solve_qp_with_non_neg_constraints(Q,g,A,b,x,0.01);
   if (solv)
     {
     m_OutputCorrectionModel = RealVectorType(x);
@@ -227,3 +230,5 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
 }
 
 }
+
+#endif
