@@ -29,7 +29,7 @@ namespace otb
  * bla bla
  *
  *
- * \ingroup IOFilters
+ * \ingroup OTBMosaic
  *
  */
 template <class TOutputImage>
