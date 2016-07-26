@@ -24,9 +24,9 @@
 namespace otb
 {
 /** \class MosaicFromDirectoryHandler
- * \brief  Reads mask data.
- *
- * bla bla
+ * \brief  This ImageSource produces an otb::image from multiple rasters
+ * stored in the m_Directory.
+ * TODO: Currently only .tif extension is supported. Might be nice to change it.
  *
  *
  * \ingroup OTBMosaic
