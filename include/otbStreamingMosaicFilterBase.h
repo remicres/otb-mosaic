@@ -205,7 +205,8 @@ protected:
   virtual void CheckShiftScaleMatrices();
 
   /** Prepare interpolators, valid regions, and input images pointers */
-  virtual void PrepareImageAccessors(InputImageType ** image, InterpolatorPointerType * interpolator);
+  virtual void PrepareImageAccessors(typename std::vector<InputImageType *>& image,
+      typename std::vector<InterpolatorPointerType>& interpolator);
 
 private:
 

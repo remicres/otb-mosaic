@@ -444,20 +444,25 @@ void StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
 
 template <class TInputImage, class TOutputImage, class TInternalValueType>
 void StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
-::PrepareImageAccessors(InputImageType ** image,InterpolatorPointerType * interpolator)
+::PrepareImageAccessors(
+    typename std::vector<InputImageType *>& image,
+    typename std::vector<InterpolatorPointerType>& interpolator)
 {
 
   // Get number of used input images
   const unsigned int n = GetNumberOfUsedInputImages();
 
+  interpolator.reserve(n);
+  image.reserve(n);
+
   // Loop on input images
   for (unsigned int i = 0 ; i < n ; i++)
     {
     // Input image i
-    image[i] = const_cast<InputImageType *>(this->GetInput(usedInputIndices.at(i) ) );
+    image.push_back( const_cast<InputImageType *>(this->GetInput(usedInputIndices.at(i) ) ) );
 
     // Interpolator i
-    interpolator[i] = static_cast<InterpolatorType*>( (m_Interpolator->CreateAnother() ).GetPointer() );
+    interpolator.push_back( static_cast<InterpolatorType*>( (m_Interpolator->CreateAnother() ).GetPointer() ) );
     interpolator[i]->SetInputImage(image[i]);
     }
 }

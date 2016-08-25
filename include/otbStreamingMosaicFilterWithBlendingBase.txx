@@ -62,22 +62,25 @@ StreamingMosaicFilterWithBlendingBase<TInputImage, TOutputImage, TDistanceImage,
 template <class TInputImage, class TOutputImage, class TDistanceImage, class TInternalValueType>
 void
 StreamingMosaicFilterWithBlendingBase<TInputImage, TOutputImage, TDistanceImage, TInternalValueType>
-::PrepareDistanceImageAccessors(DistanceImageType ** currentDistanceImage,
-                                DistanceImageInterpolatorPointer * distanceInterpolator){
+::PrepareDistanceImageAccessors(typename std::vector<DistanceImageType *>& currentDistanceImage,
+                                typename std::vector<DistanceImageInterpolatorPointer>& distanceInterpolator){
 
   // Get number of used input images
   const unsigned int n = Superclass::GetNumberOfUsedInputImages();
+
+  currentDistanceImage.reserve(n);
+  distanceInterpolator.reserve(n);
 
   // Loop on input images
   for (unsigned int i = 0 ; i < n ; i++)
     {
     // Input distance image i
-    currentDistanceImage[i] = static_cast<DistanceImageType *>(
-        Superclass::ProcessObject::GetInput(Superclass::GetUsedInputImageIndice(i)+1) );
+    currentDistanceImage.push_back( static_cast<DistanceImageType *>(
+        Superclass::ProcessObject::GetInput(Superclass::GetUsedInputImageIndice(i)+1) ) );
 
     // Distance interpolator i
-    distanceInterpolator[i] = static_cast<DistanceImageInterpolatorType*>(
-        (m_DistanceInterpolator->CreateAnother() ).GetPointer() );
+    distanceInterpolator.push_back( static_cast<DistanceImageInterpolatorType*>(
+        (m_DistanceInterpolator->CreateAnother() ).GetPointer() ) );
     distanceInterpolator[i]->SetInputImage(currentDistanceImage[i]);
     }
 }

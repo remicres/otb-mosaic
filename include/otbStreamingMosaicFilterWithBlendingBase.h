@@ -76,8 +76,8 @@ public:
   }
 
   /** Prepare interpolators, valid regions, and input images pointers */
-  virtual void PrepareDistanceImageAccessors(DistanceImageType ** currentDistanceImage,
-                                             DistanceImageInterpolatorPointer * distanceInterpolator);
+  virtual void PrepareDistanceImageAccessors(typename std::vector<DistanceImageType *>& currentDistanceImage,
+      typename std::vector<DistanceImageInterpolatorPointer>& distanceInterpolator);
 
 protected:
   StreamingMosaicFilterWithBlendingBase();

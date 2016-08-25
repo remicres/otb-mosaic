@@ -33,13 +33,13 @@ StreamingLargeFeatherMosaicFilter<TInputImage, TOutputImage, TDistanceImage, TIn
   IteratorType outputIt(mosaicImage, outputRegionForThread);
 
   // Prepare input pointers, interpolators, and valid regions (input images)
-  InputImageType *        currentImage[nbOfUsedInputImages];
-  InterpolatorPointerType interp[nbOfUsedInputImages];
+  typename std::vector<InputImageType *>        currentImage;
+  typename std::vector<InterpolatorPointerType> interp;
   Superclass::PrepareImageAccessors(currentImage, interp);
 
-  // Prepare input pointers, interpolators, and valid regions (distance images)
-  DistanceImageType *              currentDistanceImage[nbOfUsedInputImages];
-  DistanceImageInterpolatorPointer distanceInterpolator[nbOfUsedInputImages];
+  // Prepare input pointers, interpolators, and valid regions (distances images)
+  typename std::vector<DistanceImageType *>              currentDistanceImage;
+  typename std::vector<DistanceImageInterpolatorPointer> distanceInterpolator;
   Superclass::PrepareDistanceImageAccessors(currentDistanceImage, distanceInterpolator);
 
   // Temporary thread region (from input)

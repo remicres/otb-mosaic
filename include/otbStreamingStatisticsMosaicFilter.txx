@@ -55,10 +55,10 @@ StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
   // Iterate through the thread region
   IteratorType outputIt(this->GetOutput(), outputRegionForThread);
 
-  // Instanciate interpolators
-  InputImageType *        currentImage[nbOfUsedInputImages];
-  InterpolatorPointerType interps[nbOfUsedInputImages];
-  Superclass::PrepareImageAccessors(currentImage, interps);
+  // Prepare input pointers, interpolators, and valid regions (input images)
+  typename std::vector<InputImageType *>        currentImage;
+  typename std::vector<InterpolatorPointerType> interp;
+  Superclass::PrepareImageAccessors(currentImage, interp);
 
   // temporary variables
   OutputImagePointType geoPoint;
@@ -83,11 +83,11 @@ StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
       // Check if the point is inside the transformed thread region
       // (i.e. the region in the current input image which match the thread
       // region)
-      if (interps[i]->IsInsideBuffer(geoPoint) )
+      if (interp[i]->IsInsideBuffer(geoPoint) )
         {
 
         // Compute the interpolated pixel value
-        InputImagePixelType interpolatedPixel = interps[i]->Evaluate(geoPoint);
+        InputImagePixelType interpolatedPixel = interp[i]->Evaluate(geoPoint);
 
         // Put image index + image pixel value into memory
         if (Superclass::IsPixelNotEmpty(interpolatedPixel) )
