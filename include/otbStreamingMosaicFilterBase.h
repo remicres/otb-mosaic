@@ -174,7 +174,7 @@ protected:
     return usedInputIndices[i];
   }
 
-  virtual const unsigned int GetNumberOfUsedInputImages(){
+  virtual unsigned int GetNumberOfUsedInputImages() {
     return usedInputIndices.size();
   }
 
