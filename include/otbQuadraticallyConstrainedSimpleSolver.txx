@@ -86,7 +86,8 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
     }
 
   // Images layout topology Check (using Depth First Search)
-  bool marked [m_AreaInOverlaps.rows()];
+//  bool marked [m_AreaInOverlaps.rows()];
+  bool * marked = new bool[m_AreaInOverlaps.rows()];
   for (unsigned int i = 0 ; i < m_AreaInOverlaps.rows() ; i++)
     marked[i] = false;
   bool valid = true;

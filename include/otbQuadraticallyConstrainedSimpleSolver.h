@@ -167,7 +167,7 @@ private:
   // Check inputs
   void CheckInputs(void);
 
-  // Depth First Search
+  // Deep First Search
   void DFS(bool * marked, unsigned int s);
 
   // Compute the objective matrix
