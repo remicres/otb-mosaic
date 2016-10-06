@@ -168,7 +168,7 @@ private:
   void CheckInputs(void);
 
   // Deep First Search
-  void DFS(bool * marked, unsigned int s);
+  void DFS(std::vector<bool> & marked, unsigned int s);
 
   // Compute the objective matrix
   vnl_matrix<ValueType> GetQuadraticObjectiveMatrix();

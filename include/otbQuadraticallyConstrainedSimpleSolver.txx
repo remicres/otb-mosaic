@@ -23,7 +23,7 @@ template<class ValueType> QuadraticallyConstrainedSimpleSolver<ValueType>
  */
 template<class ValueType>
 void QuadraticallyConstrainedSimpleSolver<ValueType>
-::DFS(bool * marked, unsigned int s)
+::DFS(std::vector<bool> & marked, unsigned int s)
 {
 
   // mark the s vertex
@@ -86,10 +86,9 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
     }
 
   // Images layout topology Check (using Depth First Search)
-//  bool marked [m_AreaInOverlaps.rows()];
-  bool * marked = new bool[m_AreaInOverlaps.rows()];
+  std::vector<bool> marked;
   for (unsigned int i = 0 ; i < m_AreaInOverlaps.rows() ; i++)
-    marked[i] = false;
+    marked.push_back(false);
   bool valid = true;
   DFS(marked, 0);
   for (unsigned int i = 0 ; i < m_AreaInOverlaps.rows() ; i++)
