@@ -812,7 +812,6 @@ private:
                                                   DoubleImageType> ApproximateSignedDistanceMapImageFilterType;
     typedef otb::ImageFileWriter<DoubleImageType>                                         WriterType;
     typedef itk::ConstantPadImageFilter<UInt8MaskImageType, UInt8MaskImageType>           PadFilterType;
-    typedef otb::ExtractROI<UInt8MaskImageType::PixelType, UInt8MaskImageType::PixelType> ExtractFilterType;
 
     // Read the binary mask image
     UInt8MaskReaderType::Pointer reader = UInt8MaskReaderType::New();
@@ -829,15 +828,10 @@ private:
     padFilter->SetPadUpperBound(padUpperBound);
     padFilter->UpdateOutputInformation();
 
-    // Extract region
-    ExtractFilterType::Pointer extractFilter = ExtractFilterType::New();
-    extractFilter->SetInput(padFilter->GetOutput() );
-    extractFilter->SetExtractionRegion(padFilter->GetOutput()->GetLargestPossibleRegion() );
-
     // Compute the approximate signed distance image
     ApproximateSignedDistanceMapImageFilterType::Pointer approximateSignedDistanceMapImageFilter =
       ApproximateSignedDistanceMapImageFilterType::New();
-    approximateSignedDistanceMapImageFilter->SetInput(extractFilter->GetOutput() );
+    approximateSignedDistanceMapImageFilter->SetInput(padFilter->GetOutput() );
     approximateSignedDistanceMapImageFilter->SetInputIsBinary(true);
     approximateSignedDistanceMapImageFilter->SetUseImageSpacing(true);
     approximateSignedDistanceMapImageFilter->Update();
