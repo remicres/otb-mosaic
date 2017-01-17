@@ -325,9 +325,13 @@ public:
 
 private:
 
-// Macro used to convert number to string
-#define SSTR( x ) dynamic_cast< std::ostringstream & >( \
-    ( std::ostringstream() << std::dec << x ) ).str()
+  // Macro used to convert number to string
+  std::string SSTR( int x )
+  {
+    stringstream ss;
+    ss << x;
+    return ss.str();
+  }
 
   /*
    * Create a reader array from a list of files
