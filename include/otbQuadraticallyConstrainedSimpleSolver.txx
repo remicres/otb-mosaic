@@ -85,19 +85,7 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
     itkExceptionMacro( << "Input matrices must be square and have the same number of elements.");
     }
 
-  // Images layout topology Check (using Depth First Search)
-  std::vector<bool> marked;
-  for (unsigned int i = 0 ; i < m_AreaInOverlaps.rows() ; i++)
-    marked.push_back(false);
-  bool valid = true;
-  DFS(marked, 0);
-  for (unsigned int i = 0 ; i < m_AreaInOverlaps.rows() ; i++)
-    valid&=marked[i];
 
-  if (!valid)
-    {
-    itkExceptionMacro( << "Inconsistent images layout: All images must be connected, at least with one overlap.")
-    }
 }
 
 /*
@@ -119,74 +107,97 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
  *
  */
 template<class ValueType>
-typename QuadraticallyConstrainedSimpleSolver<ValueType>::RealMatrixType
+typename QuadraticallyConstrainedSimpleSolver<ValueType>::DoubleMatrixType
 QuadraticallyConstrainedSimpleSolver<ValueType>
-::GetQuadraticObjectiveMatrix()
+::GetQuadraticObjectiveMatrix(DoubleMatrixType areas, DoubleMatrixType means,
+    DoubleMatrixType stds, DoubleMatrixType mops)
 {
-  // Set STD matrix weight
-  ValueType w;
+    // Set STD matrix weight
+    ValueType w;
 
-  if (oft == Cost_Function_mu)
-    {
-    w = 0.0;
-    }
-  if (oft == Cost_Function_musig)
-    {
-    w = 1.0;
-    }
-  if (oft ==  Cost_Function_weighted_musig)
-    {
-    w = (ValueType) m_WeightOfStandardDeviationTerm;
-    }
+    if (oft == Cost_Function_mu)
+      {
+      w = 0.0;
+      }
+    if (oft == Cost_Function_musig)
+      {
+      w = 1.0;
+      }
+    if (oft ==  Cost_Function_weighted_musig)
+      {
+      w = (ValueType) m_WeightOfStandardDeviationTerm;
+      }
 
-  const unsigned int n = m_MeanInOverlaps.cols();
+    const unsigned int n = areas.cols();
 
-  // Temporary matrices H, K, L
-  RealMatrixType H(n,n,0), K(n,n,0), L(n,n,0);
-  RealMatrixType H_RMSE(n,n,0);
+    // Temporary matrices H, K, L
+    DoubleMatrixType H(n,n,0), K(n,n,0), L(n,n,0);
+    DoubleMatrixType H_RMSE(n,n,0);
+    for (unsigned int i = 0 ; i < n ; i++)
+      {
+      for (unsigned int j = 0 ; j < n ; j++)
+        {
+        if (i==j)
+          {
+          // Diag (i=j)
+          for (unsigned int k = 0 ; k < n ; k++)
+            {
+            if (i!=k)
+              {
+              H[i][j] += areas[i][k] *
+                (means[i][k]*means[i][k] + w*stds[i][k]*
+                    stds[i][k]);
+              K[i][j] += areas[i][k] * means[i][k];
+              L[i][j] += areas[i][k];
+              H_RMSE[i][j] += areas[i][k]*
+                (means[i][k]*means[i][k]+stds[i][k]*
+                    stds[i][k]);
+              }
+            }
+          }
+        else
+          {
+          // Other than diag (i!=j)
+          H[i][j] = -areas[i][j] *
+            (means[i][j]*means[j][i] + w*stds[i][j]*
+                stds[j][i]);
+          K[i][j] = -areas[i][j] * means[i][j];
+          L[i][j] = -areas[i][j];
+          H_RMSE[i][j] = -areas[i][j] * mops[i][j];
+          }
+        }
+      }
+
+    if (oft == Cost_Function_rmse)
+      {
+      H = H_RMSE;
+      }
+
+    return H;
+
+}
+
+/*
+ * Returns the sub-matrix of mat, composed only by rows/cols in idx
+ */
+template<class ValueType>
+typename QuadraticallyConstrainedSimpleSolver<ValueType>::DoubleMatrixType
+QuadraticallyConstrainedSimpleSolver<ValueType>
+::ExtractMatrix(RealMatrixType mat, ListIndexType idx)
+ {
+  unsigned int n = idx.size();
+  DoubleMatrixType newMat(n,n,0);
   for (unsigned int i = 0 ; i < n ; i++)
     {
     for (unsigned int j = 0 ; j < n ; j++)
       {
-      if (i==j)
-        {
-        // Diag (i=j)
-        for (unsigned int k = 0 ; k < n ; k++)
-          {
-          if (i!=k)
-            {
-            H[i][j] += m_AreaInOverlaps[i][k] *
-              (m_MeanInOverlaps[i][k]*m_MeanInOverlaps[i][k] + w*m_StandardDeviationInOverlaps[i][k]*
-               m_StandardDeviationInOverlaps[i][k]);
-            K[i][j] += m_AreaInOverlaps[i][k] * m_MeanInOverlaps[i][k];
-            L[i][j] += m_AreaInOverlaps[i][k];
-            H_RMSE[i][j] += m_AreaInOverlaps[i][k]*
-              (m_MeanInOverlaps[i][k]*m_MeanInOverlaps[i][k]+m_StandardDeviationInOverlaps[i][k]*
-               m_StandardDeviationInOverlaps[i][k]);
-            }
-          }
-        }
-      else
-        {
-        // Other than diag (i!=j)
-        H[i][j] = -m_AreaInOverlaps[i][j] *
-          (m_MeanInOverlaps[i][j]*m_MeanInOverlaps[j][i] + w*m_StandardDeviationInOverlaps[i][j]*
-           m_StandardDeviationInOverlaps[j][i]);
-        K[i][j] = -m_AreaInOverlaps[i][j] * m_MeanInOverlaps[i][j];
-        L[i][j] = -m_AreaInOverlaps[i][j];
-        H_RMSE[i][j] = -m_AreaInOverlaps[i][j] * m_MeanOfProductsInOverlaps[i][j];
-        }
+      unsigned int mat_i = idx[i];
+      unsigned int mat_j = idx[j];
+      newMat[i][j] = mat[mat_i][mat_j];
       }
     }
-
-  if (oft == Cost_Function_rmse)
-    {
-    H = H_RMSE;
-    }
-
-  return H;
-
-}
+  return newMat;
+ }
 
 /*
  * QP Solving using vnl
@@ -196,37 +207,106 @@ void
 QuadraticallyConstrainedSimpleSolver<ValueType>
 ::Solve()
 {
+  // Check matrices dimensions
   CheckInputs();
 
-  // Number of images
-  const unsigned int n = m_MeanInOverlaps.cols();
-
-  // Objective function
-  RealMatrixType Q = GetQuadraticObjectiveMatrix();
-  RealVectorType g(n,0);
-
-  // Constraint (Energy conservation)
-  RealMatrixType A(1,n);
-  RealVectorType b(1,0);
-  for (unsigned int i = 0 ; i < n ; i++)
+  // Identify the connected components
+  unsigned int nbOfComponents = m_AreaInOverlaps.rows();
+  unsigned int nextVertex = 0;
+  std::vector< ListIndexType > connectedComponentsIndices;
+  std::vector<bool> markedVertices;
+  for (unsigned int i = 0 ; i < nbOfComponents ; i++)
+    markedVertices.push_back(false);
+  bool allMarked = false;
+  while (!allMarked)
     {
-    b[0] += m_AreaInOverlaps[i][i]*m_MeanInOverlaps[i][i];
-    A[0][i] = m_AreaInOverlaps[i][i]*m_MeanInOverlaps[i][i];
+    // Depth First Search starting from nextVertex
+    std::vector<bool> marked;
+    for (unsigned int i = 0 ; i < nbOfComponents ; i++)
+      marked.push_back(false);
+    DFS(marked, nextVertex);
+
+    // Id the connected component
+    ListIndexType list;
+    for (unsigned int i = 0 ; i < nbOfComponents ; i++)
+      {
+      if (marked[i])
+        {
+        // Tag the connected component index
+        list.push_back(i);
+        markedVertices[i] = true;
+        }
+      else
+        {
+        // if the i-th vertex is not marked, DFS will start from it next
+        nextVertex = i;
+        }
+      }
+    connectedComponentsIndices.push_back(list);
+
+    // Check if vertices are all marked
+    allMarked = true;
+    for (unsigned int i = 0 ; i < nbOfComponents ; i++)
+      if (!markedVertices[i])
+        allMarked = false;
     }
 
-  RealVectorType x(n,1);
-  // Change tol. to 0.01 is a quick hack to avoid numerical instability...
-  bool solv = vnl_solve_qp_with_non_neg_constraints(Q,g,A,b,x,0.01);
-  if (solv)
+  // Prepare output model
+  m_OutputCorrectionModel.set_size(nbOfComponents);
+  m_OutputCorrectionModel.fill(itk::NumericTraits<ValueType>::One);
+
+  // Extract and solve all connected components one by one
+  for (unsigned int component = 0 ; component < connectedComponentsIndices.size() ; component++)
     {
-    m_OutputCorrectionModel = RealVectorType(x);
+    // Indices list
+    ListIndexType list = connectedComponentsIndices[component];
+    const unsigned int n = list.size();
+
+    // Extract matrices
+    DoubleMatrixType sub_areas = ExtractMatrix(m_AreaInOverlaps, list);
+    DoubleMatrixType sub_means = ExtractMatrix(m_MeanInOverlaps, list);
+    DoubleMatrixType sub_stdev = ExtractMatrix(m_StandardDeviationInOverlaps, list);
+    DoubleMatrixType sub_mOfPr = ExtractMatrix(m_MeanOfProductsInOverlaps, list);
+
+    // Objective function
+    DoubleMatrixType Q = GetQuadraticObjectiveMatrix(
+        sub_areas,
+        sub_means,
+        sub_stdev,
+        sub_mOfPr);
+    DoubleVectorType g(n,0);
+
+    // Constraint (Energy conservation)
+    DoubleMatrixType A(1,n);
+    DoubleVectorType b(1,0);
+    for (unsigned int i = 0 ; i < n ; i++)
+      {
+      double energy = sub_areas[i][i] * sub_means[i][i];
+      b[0] += energy;
+      A[0][i] = energy;
+      }
+
+    // Solution
+    DoubleVectorType x(n,1);
+
+    // Change tol. to 0.01 is a quick hack to avoid numerical instability...
+    bool solv = vnl_solve_qp_with_non_neg_constraints(Q,g,A,b,x,0.01);
+    if (solv)
+      {
+      for (unsigned int i = 0 ; i < n ; i++)
+        {
+        m_OutputCorrectionModel[list[i]] = static_cast<double>( x[i] );
+        }
+      }
+    else
+      {
+      itkWarningMacro( "vnl_solve_qp_with_non_neg_constraints failed for component #" << component );
+      }
+
     }
-  else
-    {
-    itkWarningMacro( "vnl_solve_qp_with_non_neg_constraints failed." );
-    m_OutputCorrectionModel.set_size(n);
-    m_OutputCorrectionModel.fill(itk::NumericTraits<ValueType>::One);
-    }
+
+
+
 }
 
 }

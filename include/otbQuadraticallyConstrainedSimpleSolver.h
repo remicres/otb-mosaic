@@ -59,8 +59,11 @@ public:
 
   /** Typedefs */
   typedef vnl_matrix<ValueType> RealMatrixType;
+  typedef vnl_matrix<double>    DoubleMatrixType;
   typedef vnl_matrix<long>      LongMatrixType;
   typedef vnl_vector<ValueType> RealVectorType;
+  typedef vnl_vector<double>    DoubleVectorType;
+  typedef std::vector <unsigned int> ListIndexType;
 
   /** Enum for objective function type */
   enum ObjectiveFunctionType
@@ -171,7 +174,11 @@ private:
   void DFS(std::vector<bool> & marked, unsigned int s);
 
   // Compute the objective matrix
-  vnl_matrix<ValueType> GetQuadraticObjectiveMatrix();
+  DoubleMatrixType GetQuadraticObjectiveMatrix(DoubleMatrixType areas,
+      DoubleMatrixType means, DoubleMatrixType stds, DoubleMatrixType mops);
+
+  // Extract a sub matrix from indices list
+  DoubleMatrixType ExtractMatrix(RealMatrixType mat, ListIndexType idx);
 
   // Input
   RealMatrixType m_MeanInOverlaps;
