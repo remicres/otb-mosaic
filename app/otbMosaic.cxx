@@ -1103,12 +1103,12 @@ private:
     const unsigned int nMasks = statsVectorDataList->Size();
     const unsigned int nCutline = cutVectorDataList->Size();
 
-    if (cutVectorDataList->HasValue() && nCutline != nImages)
+    if (GetParameterByKey("vdcut")->HasValue() && nCutline != nImages)
       {
       otbAppLogFATAL("Number of input cutlines (" << nCutline
                                                   << ") should be equal to number of images (" << nImages << ")");
       }
-    if (statsVectorDataList->HasValue() && nMasks != nImages)
+    if (GetParameterByKey("vdstats")->HasValue() && nMasks != nImages)
       {
       otbAppLogFATAL("Number of input masks (" << nMasks
                                                << ") should be equal to number of images (" << nImages << ")");
@@ -1145,7 +1145,7 @@ private:
       }
     else
       {
-      if (statsVectorDataList->HasValue())
+      if (GetParameterByKey("vdstats")->HasValue())
         {
 
         // Write binary masks used for statistics computation
@@ -1244,7 +1244,7 @@ private:
       otbAppLogINFO("Composition method is set to none. Skipping distance map images computation.");
 
       // Compute binary masks for cutline, if any
-      if (cutVectorDataList->HasValue())
+      if (GetParameterByKey("vdcut")->HasValue())
         {
         otbAppLogINFO("Computing masks images for cutline... ");
         binaryMaskForCutlineFileNameList.clear();
@@ -1268,7 +1268,7 @@ private:
         otbAppLogINFO("Performing simple composition method in rgb color space");
 
         // Mask if needed
-        if (cutVectorDataList->HasValue())
+        if (GetParameterByKey("vdcut")->HasValue())
           {
           // Connect masks readers to maskfilters
           m_MaskImageFilterForCutline =  CreateConnectedFilterArray<RGB2LABFilterType,MaskReaderType, MaskImageFilterType>(
@@ -1297,7 +1297,7 @@ private:
         otbAppLogINFO("Performing simple composition method in radiometric color space");
 
         // Mask if needed
-        if (cutVectorDataList->HasValue())
+        if (GetParameterByKey("vdcut")->HasValue())
           {
           // Connect masks readers to maskfilters
           m_MaskImageFilterForCutline =  CreateConnectedFilterArrayToInput<MaskReaderType, MaskImageFilterType>(
@@ -1327,7 +1327,7 @@ private:
       for (unsigned int i = 0 ; i < nImages ; i++)
         {
         string outputFileName = GenerateFileName("tmp_distance_image", i);
-        if (cutVectorDataList->HasValue())
+        if (GetParameterByKey("vdcut")->HasValue())
           {
           WriteDistanceImageFromCutline(imagesList->GetNthElement(i),
                                         cutVectorDataList->GetNthElement(i), outputFileName);
