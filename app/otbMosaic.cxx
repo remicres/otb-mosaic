@@ -1102,12 +1102,13 @@ private:
     const unsigned int nImages = imagesList->Size();
     const unsigned int nMasks = statsVectorDataList->Size();
     const unsigned int nCutline = cutVectorDataList->Size();
-    if ( nCutline != 0 && nCutline != nImages)
+
+    if (cutVectorDataList->HasValue() && nCutline != nImages)
       {
       otbAppLogFATAL("Number of input cutlines (" << nCutline
                                                   << ") should be equal to number of images (" << nImages << ")");
       }
-    if ( nMasks != 0 && nMasks != nImages)
+    if (statsVectorDataList->HasValue() && nMasks != nImages)
       {
       otbAppLogFATAL("Number of input masks (" << nMasks
                                                << ") should be equal to number of images (" << nImages << ")");
@@ -1144,7 +1145,7 @@ private:
       }
     else
       {
-      if (nMasks != 0)
+      if (statsVectorDataList->HasValue())
         {
 
         // Write binary masks used for statistics computation
@@ -1243,7 +1244,7 @@ private:
       otbAppLogINFO("Composition method is set to none. Skipping distance map images computation.");
 
       // Compute binary masks for cutline, if any
-      if (nCutline != 0)
+      if (cutVectorDataList->HasValue())
         {
         otbAppLogINFO("Computing masks images for cutline... ");
         binaryMaskForCutlineFileNameList.clear();
@@ -1267,7 +1268,7 @@ private:
         otbAppLogINFO("Performing simple composition method in rgb color space");
 
         // Mask if needed
-        if (nCutline != 0)
+        if (cutVectorDataList->HasValue())
           {
           // Connect masks readers to maskfilters
           m_MaskImageFilterForCutline =  CreateConnectedFilterArray<RGB2LABFilterType,MaskReaderType, MaskImageFilterType>(
@@ -1296,7 +1297,7 @@ private:
         otbAppLogINFO("Performing simple composition method in radiometric color space");
 
         // Mask if needed
-        if (nCutline != 0)
+        if (cutVectorDataList->HasValue())
           {
           // Connect masks readers to maskfilters
           m_MaskImageFilterForCutline =  CreateConnectedFilterArrayToInput<MaskReaderType, MaskImageFilterType>(
@@ -1326,7 +1327,7 @@ private:
       for (unsigned int i = 0 ; i < nImages ; i++)
         {
         string outputFileName = GenerateFileName("tmp_distance_image", i);
-        if (nCutline != 0)
+        if (cutVectorDataList->HasValue())
           {
           WriteDistanceImageFromCutline(imagesList->GetNthElement(i),
                                         cutVectorDataList->GetNthElement(i), outputFileName);
