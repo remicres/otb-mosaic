@@ -1,4 +1,4 @@
 Git MIRROR:
   stage: deploy
   script:
-    - git push --mirror https://BITBUCKET_USERNAME:BITBUCKET_PASSWORD@bitbucket.org/group/repo.git
+    - git push --mirror https://github.com/remicres/otb-mosaic.git
