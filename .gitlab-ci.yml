@@ -1,5 +1,4 @@
-job1:
-  script: "execute-script-for-job1"
-
-job2:
-  script: "execute-script-for-job2"
+Git MIRROR:
+  stage: deploy
+  script:
+    - git push --mirror https://BITBUCKET_USERNAME:BITBUCKET_PASSWORD@bitbucket.org/group/repo.git
