@@ -1,4 +1,0 @@
-Git MIRROR:
-  stage: deploy
-  script:
-    - git push --mirror https://github.com/remicres/otb-mosaic.git
