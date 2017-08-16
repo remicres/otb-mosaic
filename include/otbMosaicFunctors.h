@@ -8,6 +8,9 @@
 #ifndef MODULES_REMOTE_MOSAIC_INCLUDE_OTBMOSAICFUNCTORS_H_
 #define MODULES_REMOTE_MOSAIC_INCLUDE_OTBMOSAICFUNCTORS_H_
 
+#include "vnl/vnl_matrix.h"
+#include "vcl_compiler.h"
+
 namespace otb{
 
 namespace Functor{

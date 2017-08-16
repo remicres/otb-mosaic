@@ -27,9 +27,6 @@
 // Pad image filter
 #include "itkConstantPadImageFilter.h"
 
-// otb ROI filter
-#include "otbExtractROI.h"
-
 // danielson distance image
 #include "itkDanielssonDistanceMapImageFilter.h"
 
@@ -49,9 +46,6 @@
 
 // Solver for mosaic harmonization
 #include "otbQuadraticallyConstrainedSimpleSolver.h"
-
-// maths
-#include "vcl_complex.h"
 
 // system tools
 #include <itksys/SystemTools.hxx>
@@ -1198,7 +1192,7 @@ private:
         }
       }
 
-  }   // DOExecute()
+  }   // DoExecute()
 
   void AfterExecuteAndWriteOutputs()
   {
@@ -1207,7 +1201,7 @@ private:
     deleteFiles(binaryMaskForStatsFileNameList);
     deleteFiles(binaryMaskForCutlineFileNameList);
     otbAppLogINFO("Done");
-  }
+  }   // AfterExecuteAndWriteOutputs()
 
   // Mosaic filters
   SimpleMosaicFilterType::Pointer               m_simpleMosaicFilter;
