@@ -40,6 +40,7 @@
 
 // Functors for lab <--> rgb color spaces
 #include "otbUnaryFunctorImageFilter.h"
+#include "otbMosaicFunctors.h"
 
 // Masks
 #include "itkMaskImageFilter.h"
@@ -56,181 +57,6 @@
 #include <itksys/SystemTools.hxx>
 
 using namespace std;
-
-/**
- * \class RGB2LABFunctor
- * \brief Base class for converting RGB into LAB color space (Ruderman et al.)
- */
-template< class TInput, class TOutput>
-class RGB2LAB
-{
-public:
-  RGB2LAB() {
-    M.set_size(3,3);
-    M[0][0] = 0.3811; M[0][1] = 0.5783; M[0][2] = 0.0406;
-    M[1][0] = 0.1967; M[1][1] = 0.7244; M[1][2] = 0.0790;
-    M[2][0] = 0.0241; M[2][1] = 0.1288; M[2][2] = 0.8531;
-
-    D1.set_size(3,3);
-    D1.fill(0.0);
-    D1[0][0] = 1.0 / vcl_sqrt(3.0);
-    D1[1][1] = 1.0 / vcl_sqrt(6.0);
-    D1[2][2] = 1.0 / vcl_sqrt(2.0);
-
-    D2.set_size(3,3);
-    D2.fill(1.0);
-    D2[1][2] = -2.0;
-    D2[2][1] = -1.0;
-    D2[2][2] = 0.0;
-
-  }
-
-  ~RGB2LAB() {
-  }
-
-  bool operator!=( const RGB2LAB & ) const {
-    return false;
-  }
-
-  bool operator==( const RGB2LAB & other ) const {
-    return !(*this != other);
-  }
-
-  inline TOutput operator()( const TInput & A ) const
-  {
-    TOutput output;
-
-    output.SetSize(3);
-    if (A[0] == 0 && A[1] == 0 && A[2] == 0)
-      {
-      output.Fill(0);
-      return output;
-      }
-
-    // RGB
-    vnl_matrix<double> rgb(3,1);
-    rgb[0][0] = A[0];
-    rgb[1][0] = A[1];
-    rgb[2][0] = A[2];
-
-    // LMS
-    vnl_matrix<double> lms(3,1);
-    lms = M*rgb;
-
-    // LMS (log10)
-    const double log10 = vcl_log(10);
-    lms[0][0] = vcl_log( lms[0][0] ) / log10;
-    lms[1][0] = vcl_log( lms[1][0] ) / log10;
-    lms[2][0] = vcl_log( lms[2][0] ) / log10;
-
-    // LAB
-    vnl_matrix<double> lab(3,1);
-    lab = D1*(D2*lms);
-
-    output[0] = lab[0][0];
-    output[1] = lab[1][0];
-    output[2] = lab[2][0];
-
-    return output;
-  }
-
-  inline unsigned int GetOutputSize(){
-    return 3;
-  }
-
-private:
-  vnl_matrix<double> M;
-  vnl_matrix<double> D1;
-  vnl_matrix<double> D2;
-
-};
-
-/**
- * \class LAB2RGB Functor
- * \brief Base class for converting LAB into RGB color space (Ruderman et al.)
- */
-template< class TInput, class TOutput>
-class LAB2RGB
-{
-public:
-  LAB2RGB() {
-    M.set_size(3,3);
-    M[0][0] = 4.4687; M[0][1] = -3.5887; M[0][2] = 0.1197;
-    M[1][0] = -1.2197; M[1][1] = 2.3831; M[1][2] = -0.1626;
-    M[2][0] = 0.0579; M[2][1] = -0.2584; M[2][2] = 1.1934;
-
-    D1.set_size(3,3);
-    D1.fill(0.0);
-    D1[0][0] = 1.0 / vcl_sqrt(3.0);
-    D1[1][1] = 1.0 / vcl_sqrt(6.0);
-    D1[2][2] = 1.0 / vcl_sqrt(2.0);
-
-    D2.set_size(3,3);
-    D2.fill(1.0);
-    D2[1][2] = -1.0;
-    D2[2][1] = -2.0;
-    D2[2][2] = 0.0;
-
-  }
-
-  ~LAB2RGB() {
-  }
-
-  bool operator!=( const LAB2RGB & ) const
-  {
-    return false;
-  }
-
-  bool operator==( const LAB2RGB & other ) const
-  {
-    return !(*this != other);
-  }
-
-  inline TOutput operator()( const TInput & A ) const
-  {
-    TOutput output;
-
-    output.SetSize(3);
-
-    if (A[0] == 0 && A[1] == 0 && A[2] == 0)
-      {
-      output.Fill(0);
-      return output;
-      }
-    // LAB
-    vnl_matrix<double> lab(3,1);
-    lab[0][0] = A[0];
-    lab[1][0] = A[1];
-    lab[2][0] = A[2];
-
-    // LMS
-    vnl_matrix<double> lms(3,1);
-    lms = D2*(D1*lab);
-    lms[0][0] = vcl_pow(10.0, lms[0][0]);
-    lms[1][0] = vcl_pow(10.0, lms[1][0]);
-    lms[2][0] = vcl_pow(10.0, lms[2][0]);
-
-    // RGB
-    vnl_matrix<double> rgb(3,1);
-    rgb = M*lms;
-
-    output[0] = rgb[0][0];
-    output[1] = rgb[1][0];
-    output[2] = rgb[2][0];
-
-    return output;
-  }
-
-  inline unsigned int GetOutputSize(){
-    return 3;
-  }
-
-private:
-  vnl_matrix<double> M;
-  vnl_matrix<double> D1;
-  vnl_matrix<double> D2;
-
-};
 
 namespace otb
 {
@@ -273,24 +99,24 @@ public:
   itkTypeMacro(Mosaic, Application);
 
   /** Solver (Cresson & St Geours) */
-  typedef DoubleImageType::InternalPixelType                         SolverValueType;
-  typedef otb::QuadraticallyConstrainedSimpleSolver<SolverValueType> SolverType;
+  typedef DoubleImageType::InternalPixelType                                           SolverPrecisionType;
+  typedef otb::QuadraticallyConstrainedSimpleSolver<SolverPrecisionType>               SolverType;
 
   /* Mosaic Filters */
-  typedef otb::StreamingSimpleMosaicFilter<FloatVectorImageType,
-                                           FloatVectorImageType>      SimpleMosaicFilterType;
-  typedef otb::StreamingLargeFeatherMosaicFilter<FloatVectorImageType, FloatVectorImageType,
-                                                 DoubleImageType>     LargeFeatherMosaicFilterType;
+  typedef otb::StreamingSimpleMosaicFilter<FloatVectorImageType,FloatVectorImageType>  SimpleMosaicFilterType;
+  typedef otb::StreamingLargeFeatherMosaicFilter<FloatVectorImageType,
+      FloatVectorImageType, DoubleImageType>                                           LargeFeatherMosaicFilterType;
   typedef otb::StreamingFeatherMosaicFilter<FloatVectorImageType, FloatVectorImageType,
-                                                     DoubleImageType> SlimFeatherMosaicFilterType;
+      DoubleImageType>                                                                 SlimFeatherMosaicFilterType;
   typedef otb::StreamingStatisticsMosaicFilter<FloatVectorImageType,FloatVectorImageType,
-                                               SolverValueType>       StatisticsMosaicFilterType;
+      SolverPrecisionType>                                                             StatisticsMosaicFilterType;
 
   /* Binary masks */
-  typedef otb::Image<bool>                                                                MaskImageType;
-  typedef otb::Image<unsigned int>                                                        LabelImageType;
-  typedef itk::MaskImageFilter<FloatVectorImageType, MaskImageType, FloatVectorImageType> MaskImageFilterType;
-  typedef otb::ImageFileReader<MaskImageType>                                             MaskReaderType;
+  typedef otb::Image<bool>                                                             MaskImageType;
+  typedef otb::Image<unsigned int>                                                     LabelImageType;
+  typedef itk::MaskImageFilter<FloatVectorImageType, MaskImageType,
+      FloatVectorImageType>                                                            MaskImageFilterType;
+  typedef otb::ImageFileReader<MaskImageType>                                          MaskReaderType;
 
   /* UInt8 binary masks */
   typedef otb::Image<unsigned char>                                                    UInt8MaskImageType;
@@ -301,37 +127,33 @@ public:
   typedef itk::BinaryThresholdImageFilter<FloatImageType, UInt8MaskImageType>          ImageThresholdFilterType;
 
   /* Distance map image writer typedef */
-  typedef otb::ImageFileReader<DoubleImageType> DistanceMapImageReaderType;
+  typedef otb::ImageFileReader<DoubleImageType>                                        DistanceMapImageReaderType;
 
   /* Vector data filters typedefs */
   typedef otb::VectorDataIntoImageProjectionFilter<VectorDataType,
-                                                   FloatVectorImageType> VectorDataReprojFilterType;
-  typedef otb::VectorDataToLabelImageFilter<VectorDataType, LabelImageType> RasterizerType;
+      FloatVectorImageType>                                                            VectorDataReprojFilterType;
+  typedef otb::VectorDataToLabelImageFilter<VectorDataType, LabelImageType>            RasterizerType;
 
   /* Decorrelated color space <--> RGB functors typedefs */
-  typedef LAB2RGB<FloatVectorImageType::PixelType, FloatVectorImageType::PixelType>               LAB2RGBFunctor;
-  typedef RGB2LAB<FloatVectorImageType::PixelType, FloatVectorImageType::PixelType>               RGB2LABFunctor;
-  typedef otb::UnaryFunctorImageFilter<FloatVectorImageType,FloatVectorImageType, RGB2LABFunctor> RGB2LABFilterType;
-  typedef otb::UnaryFunctorImageFilter<FloatVectorImageType,FloatVectorImageType, LAB2RGBFunctor> LAB2RGBFilterType;
+  typedef otb::Functor::LAB2RGB<FloatVectorImageType::PixelType,
+      FloatVectorImageType::PixelType>                                                 LAB2RGBFunctor;
+  typedef otb::Functor::RGB2LAB<FloatVectorImageType::PixelType,
+      FloatVectorImageType::PixelType>                                                 RGB2LABFunctor;
+  typedef otb::UnaryFunctorImageFilter<FloatVectorImageType,FloatVectorImageType,
+      RGB2LABFunctor>                                                                  RGB2LABFilterType;
+  typedef otb::UnaryFunctorImageFilter<FloatVectorImageType,FloatVectorImageType,
+      LAB2RGBFunctor>                                                                  LAB2RGBFilterType;
 
   /** Interpolators typedefs */
-  typedef itk::LinearInterpolateImageFunction<FloatVectorImageType, double>          LinearInterpolationType;
-  typedef itk::NearestNeighborInterpolateImageFunction<FloatVectorImageType, double> NearestNeighborInterpolationType;
-  typedef otb::BCOInterpolateImageFunction<FloatVectorImageType>                     BCOInterpolationType;
-  typedef itk::NearestNeighborInterpolateImageFunction<UInt8MaskImageType>           UInt8NNInterpolatorType;
+  typedef itk::LinearInterpolateImageFunction<FloatVectorImageType, double>            LinearInterpolationType;
+  typedef itk::NearestNeighborInterpolateImageFunction<FloatVectorImageType, double>   NearestNeighborInterpolationType;
+  typedef otb::BCOInterpolateImageFunction<FloatVectorImageType>                       BCOInterpolationType;
+  typedef itk::NearestNeighborInterpolateImageFunction<UInt8MaskImageType>             UInt8NNInterpolatorType;
 
   /** UInt8 filters typedefs */
-  typedef otb::StreamingResampleImageFilter<UInt8MaskImageType, UInt8MaskImageType> UInt8ResampleImageFilterType;
+  typedef otb::StreamingResampleImageFilter<UInt8MaskImageType, UInt8MaskImageType>    UInt8ResampleImageFilterType;
 
 private:
-
-  // Macro used to convert number to string
-  std::string SSTR( int x )
-  {
-    stringstream ss;
-    ss << x;
-    return ss.str();
-  }
 
   /*
    * Create a reader array from a list of files
@@ -608,7 +430,7 @@ private:
   string GenerateFileName(string tag, int id)
   {
     // Create a filename
-    string outputFile = m_TempFilesPrefix + "_" + tag + "_" + SSTR(id) + ".tif";
+    string outputFile = m_TempFilesPrefix + "_" + tag + "_" + std::to_string(id) + ".tif";
     return outputFile;
   }
 
@@ -744,7 +566,7 @@ private:
 
   void DoUpdateParameters()
   {
-    // Nothing to do here : all parameters are independent
+    // TODO: update parameters
   }
 
   /*
@@ -969,21 +791,18 @@ private:
         break;
       }
 
-    vnl_matrix<long> area = m_StatsFilter->GetAreaInPixels();
-
     // Colorimetric correction (Cresson & St Geours)
     filter->UpdateOutputInformation();
-    const unsigned int          nImages = this->GetParameterImageList("il")->Size();
-    const unsigned int          nBands = filter->GetOutput()->GetNumberOfComponentsPerPixel();
-    vnl_matrix<SolverValueType> scales(nImages, nBands, 1);
-    solver->SetAreaInOverlaps(m_StatsFilter->GetAreaInPixels() );
-
+    const unsigned int nImages = this->GetParameterImageList("il")->Size();
+    const unsigned int nBands = filter->GetOutput()->GetNumberOfComponentsPerPixel();
+    vnl_matrix<SolverPrecisionType> scales(nImages, nBands, 1);
+    solver->SetAreaInOverlaps(m_StatsFilter->GetAreas());
     for (unsigned int band = 0 ; band < nBands ; band++)
       {
       otbAppLogINFO("computing correction model for band " << band );
-      solver->SetMeanInOverlaps(m_StatsFilter->GetMean(band) );
-      solver->SetStandardDeviationInOverlaps(m_StatsFilter->GetStDev(band) );
-      solver->SetMeanOfProductsInOverlaps(m_StatsFilter->GetProdMean(band) );
+      solver->SetMeanInOverlaps(m_StatsFilter->GetMeans()[band] );
+      solver->SetStandardDeviationInOverlaps(m_StatsFilter->GetStds()[band] );
+      solver->SetMeanOfProductsInOverlaps(m_StatsFilter->GetMeansOfProducts()[band] );
       solver->Solve();
 
       // Keep shifts & scales
@@ -1135,10 +954,7 @@ private:
     // Get distance map image sampling ratio
     m_DistanceMapImageSamplingRatio = GetParameterFloat("distancemap.sr");
 
-    /////////////////////////////////////////////////////////////
-    //				 Compute stats (if needed)
-    /////////////////////////////////////////////////////////////
-
+    // Compute stats (if needed)
     if (this->GetParameterInt("harmo.method")==Harmonisation_Method_none)
       {
       otbAppLogINFO("No harmonization method is selected");
@@ -1213,31 +1029,13 @@ private:
           }
         }
 
-      // Compute stats (explicit streaming)
-      m_StatsFilter->UpdateOutputInformation();
-      typedef otb::RAMDrivenAdaptativeStreamingManager<FloatVectorImageType> StreamingManagerType;
-      StreamingManagerType::Pointer m_StreamingManager = StreamingManagerType::New();
-      m_StreamingManager->PrepareStreaming(m_StatsFilter->GetOutput(),
-                                           m_StatsFilter->GetOutput()->GetLargestPossibleRegion() );
-      int m_NumberOfDivisions = m_StreamingManager->GetNumberOfSplits();
-      for (int m_CurrentDivision = 0;
-           m_CurrentDivision < m_NumberOfDivisions;
-           m_CurrentDivision++)
-        {
-        FloatVectorImageType::RegionType streamRegion = m_StreamingManager->GetSplit(m_CurrentDivision);
-        m_StatsFilter->GetOutput()->SetRequestedRegion(streamRegion);
-        m_StatsFilter->GetOutput()->PropagateRequestedRegion();
-        m_StatsFilter->GetOutput()->UpdateOutputData();
-        AddProcess(m_StatsFilter, "Computing stats (Tile "
-                   + SSTR(m_CurrentDivision) + " on "
-                   + SSTR(m_NumberOfDivisions) + ")");
-        }
+      // Compute stats using the persistent filter
+      m_StatsFilter->GetStreamer()->SetAutomaticAdaptativeStreaming(GetParameterInt("ram"));
+      AddProcess(m_StatsFilter->GetStreamer(), "Computing stats");
+      m_StatsFilter->Update();
       }
 
-    /////////////////////////////////////////////////////////////
-    //				Instantiate the mosaic filters
-    /////////////////////////////////////////////////////////////
-
+    // Instantiate the mosaic filters
     if (GetParameterInt("comp.feather")==Composition_Method_none)
       {
       // Use a simple filter. No need for distance map images
@@ -1411,30 +1209,31 @@ private:
     otbAppLogINFO("Done");
   }
 
-  // Mosaicking filters
-  SimpleMosaicFilterType::Pointer m_simpleMosaicFilter;
-  LargeFeatherMosaicFilterType::Pointer m_largeFeatherMosaicFilter;
-  SlimFeatherMosaicFilterType::Pointer m_smallFeatherMosaicFilter;
-  StatisticsMosaicFilterType::Pointer m_StatsFilter;
+  // Mosaic filters
+  SimpleMosaicFilterType::Pointer               m_simpleMosaicFilter;
+  LargeFeatherMosaicFilterType::Pointer         m_largeFeatherMosaicFilter;
+  SlimFeatherMosaicFilterType::Pointer          m_smallFeatherMosaicFilter;
+  StatisticsMosaicFilterType::Pointer           m_StatsFilter;
 
-  // rgb<-->lab functors
-  vector<RGB2LABFilterType::Pointer> m_rgb2labFilter;
-  LAB2RGBFilterType::Pointer m_lab2rgbFilter;
+  // RGB<-->l\alpha\beta functors
+  vector<RGB2LABFilterType::Pointer>            m_rgb2labFilter;
+  LAB2RGBFilterType::Pointer                    m_lab2rgbFilter;
 
-  // mask image filters
-  vector<MaskImageFilterType::Pointer> m_MaskImageFilterForStats;
-  vector<MaskReaderType::Pointer> m_MaskReaderForStats;
-  vector<MaskImageFilterType::Pointer> m_MaskImageFilterForCutline;
-  vector<MaskReaderType::Pointer> m_MaskReaderForCutline;
-  vector<DistanceMapImageReaderType::Pointer> m_DistanceMapImageReader;
+  // Mask image filters
+  vector<MaskImageFilterType::Pointer>          m_MaskImageFilterForStats;
+  vector<MaskReaderType::Pointer>               m_MaskReaderForStats;
+  vector<MaskImageFilterType::Pointer>          m_MaskImageFilterForCutline;
+  vector<MaskReaderType::Pointer>               m_MaskReaderForCutline;
+
+  // Distance images reader
+  vector<DistanceMapImageReaderType::Pointer>   m_DistanceMapImageReader;
 
   // Parameters
-  string m_TempFilesPrefix; // Temp. directory
-  vector<string> distanceImageFileNameList;
-  vector<string> binaryMaskForStatsFileNameList;
-  vector<string> binaryMaskForCutlineFileNameList;
-
-  double m_DistanceMapImageSamplingRatio;
+  string           m_TempFilesPrefix;                // Temp. directory
+  vector<string>   distanceImageFileNameList;        // Temp. filenames for distance images
+  vector<string>   binaryMaskForStatsFileNameList;   // Temp. filenames for stats masks
+  vector<string>   binaryMaskForCutlineFileNameList; // Temp. filenames for cutlines masks
+  double           m_DistanceMapImageSamplingRatio;  // Spacing ratio mosaic / distance image
 
 };
 }

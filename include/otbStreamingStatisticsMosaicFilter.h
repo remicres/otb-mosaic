@@ -2,10 +2,15 @@
 #define __StreamingStatisticsMosaicFilter_H
 
 #include "otbStreamingMosaicFilterBase.h"
+#include "otbPersistentMosaicFilter.h"
+#include "otbPersistentFilterStreamingDecorator.h"
+#include "itkArray.h"
+#include "itkSimpleDataObjectDecorator.h"
+#include "itkImageRegionConstIteratorWithOnlyIndex.h"
 
 namespace otb
 {
-/** \class StreamingStatisticsMosaicFilter
+/** \class PersistentStatisticsMosaicFilter
  * \brief Computes the statistics of a mosaic from an input images set.
  * The output pixel value is equal to the number of overlaps
  *
@@ -24,14 +29,14 @@ namespace otb
  * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage=TInputImage, class TInternalValueType=double>
-class ITK_EXPORT StreamingStatisticsMosaicFilter : public otb::StreamingMosaicFilterBase<TInputImage, TOutputImage,
+class ITK_EXPORT PersistentStatisticsMosaicFilter : public otb::PersistentMosaicFilter<TInputImage, TOutputImage,
                                                                                          TInternalValueType>
 {
 public:
 
   /** Standard Self typedef */
-  typedef StreamingStatisticsMosaicFilter                                               Self;
-  typedef otb::StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType> Superclass;
+  typedef PersistentStatisticsMosaicFilter                                               Self;
+  typedef PersistentMosaicFilter<TInputImage, TOutputImage, TInternalValueType> Superclass;
   typedef itk::SmartPointer<Self>                                                       Pointer;
   typedef itk::SmartPointer<const Self>                                                 ConstPointer;
 
@@ -39,7 +44,7 @@ public:
   itkNewMacro(Self);
 
   /** Runtime information support. */
-  itkTypeMacro(StreamingStatisticsMosaicFilter, StreamingMosaicFilterBase);
+  itkTypeMacro(PersistentStatisticsMosaicFilter, PersistentMosaicFilter);
 
   /** Input image typedefs.  */
   typedef typename Superclass::InputImageType              InputImageType;
@@ -71,29 +76,88 @@ public:
   typedef typename Superclass::DefaultInterpolatorType DefaultInterpolatorType;
   typedef typename Superclass::InternalImageType       InternalImageType;
   typedef typename Superclass::InternalPixelType       InternalPixelType;
-  typedef typename Superclass::IteratorType            IteratorType;
   typedef typename Superclass::ConstIteratorType       ConstIteratorType;
   typedef typename Superclass::StreamingTraitsType     StreamingTraitsType;
 
-  /** Get Stats methods */
-  vnl_matrix<InternalValueType> GetMean(unsigned int band);
+  typedef itk::ImageRegionConstIteratorWithOnlyIndex<OutputImageType> IteratorType;
 
-  vnl_matrix<InternalValueType> GetProdMean(unsigned int band);
+  /** Typedefs for statistics */
+  typedef vnl_matrix<InternalValueType>       RealMatrixType;
+  typedef vnl_vector<InternalValueType>       RealVectorType;
+  typedef vnl_matrix<long>                    LongMatrixType;
+  typedef vnl_vector<long>                    LongVectorType;
+  typedef std::vector<RealMatrixType>         RealMatrixListType;
+  typedef itk::SimpleDataObjectDecorator<RealMatrixListType>  RealMatrixListObjectType;
+  typedef itk::SimpleDataObjectDecorator<LongMatrixType>      LongMatrixObjectType;
 
-  vnl_matrix<InternalValueType> GetStDev(unsigned int band);
+  /** Smart Pointer type to a DataObject. */
+  typedef typename itk::DataObject::Pointer DataObjectPointer;
+  typedef itk::ProcessObject::DataObjectPointerArraySizeType DataObjectPointerArraySizeType;
 
-  vnl_vector<InputImageInternalPixelType> GetMin(unsigned int band);
+  /** Overrided methods */
+  virtual void AllocateOutputs();
+  virtual void ThreadedGenerateData(const OutputImageRegionType& outputRegionForThread, itk::ThreadIdType threadId );
+  virtual void Reset();
+  virtual void Synthetize();
 
-  vnl_vector<InputImageInternalPixelType> GetMax(unsigned int band);
+  /** Make a DataObject of the correct type to be used as the specified
+   * output. */
+  DataObjectPointer MakeOutput(DataObjectPointerArraySizeType idx) ITK_OVERRIDE;
+  using Superclass::MakeOutput;
 
-  vnl_matrix<long> GetAreaInPixels();
+  /** Return the computed Mean. */
+  RealMatrixListType GetMeans() const
+  {
+    return this->GetMeansOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMeansOutput();
+  const RealMatrixListObjectType* GetMeansOutput() const;
+
+  /** Return the computed Std. */
+  RealMatrixListType GetStds() const
+  {
+    return this->GetStdsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetStdsOutput();
+  const RealMatrixListObjectType* GetStdsOutput() const;
+
+  /** Return the computed Min. */
+  RealMatrixListType GetMins() const
+  {
+    return this->GetMinsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMinsOutput();
+  const RealMatrixListObjectType* GetMinsOutput() const;
+
+  /** Return the computed Max. */
+  RealMatrixListType GetMaxs() const
+  {
+    return this->GetMaxsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMaxsOutput();
+  const RealMatrixListObjectType* GetMaxsOutput() const;
+
+  /** Return the computed MeansOfProduct. */
+  RealMatrixListType GetMeansOfProducts() const
+  {
+    return this->GetMeansOfProductsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMeansOfProductsOutput();
+  const RealMatrixListObjectType* GetMeansOfProductsOutput() const;
+
+  /** Return the computed areas. */
+  LongMatrixType GetAreas() const
+  {
+    return this->GetAreasOutput()->Get();
+  }
+  LongMatrixObjectType* GetAreasOutput();
+  const LongMatrixObjectType* GetAreasOutput() const;
 
 protected:
-  StreamingStatisticsMosaicFilter();
-  virtual ~StreamingStatisticsMosaicFilter() {
-  }
+  PersistentStatisticsMosaicFilter();
+  virtual ~PersistentStatisticsMosaicFilter() {}
 
-  /** StreamingStatisticsMosaicFilter can be implemented as a multithreaded filter.
+  /** PersistentStatisticsMosaicFilter can be implemented as a multithreaded filter.
    * Therefore, this implementation provides a ThreadedGenerateData() routine
    * which is called for each processing thread. The output image data is
    * allocated automatically by the superclass prior to calling
@@ -104,14 +168,7 @@ protected:
    * \sa ImageToImageFilter::ThreadedGenerateData(),
    *     ImageToImageFilter::GenerateData()  */
 
-  /** Overrided methods */
-  virtual void ThreadedGenerateData(const OutputImageRegionType& outputRegionForThread, itk::ThreadIdType threadId );
 
-  virtual void GenerateOutputInformation();
-
-  virtual void AfterThreadedGenerateData();
-
-  virtual void BeforeThreadedGenerateData();
 
   /** Class for storing thread results:
    * -sum of values
@@ -135,27 +192,27 @@ public:
     /* Copy constructor */
     ThreadResultsContainer(const ThreadResultsContainer& other)
     {
-      m_count = vnl_vector<long>(other.m_count);
-      m_sum = vnl_matrix<InternalValueType>(other.m_sum);
-      m_cosum = vnl_matrix<InternalValueType>(other.m_cosum);
-      m_sqSum = vnl_matrix<InternalValueType>(other.m_sqSum);
-      m_min = vnl_matrix<InternalValueType>(other.m_min);
-      m_max = vnl_matrix<InternalValueType>(other.m_max);
+      m_count   = LongVectorType(other.m_count);
+      m_sum     = RealMatrixType(other.m_sum);
+      m_cosum   = RealMatrixType(other.m_cosum);
+      m_sqSum   = RealMatrixType(other.m_sqSum);
+      m_min     = RealMatrixType(other.m_min);
+      m_max     = RealMatrixType(other.m_max);
     }
 
     /* Clear routine: Resize at the specified dimension and clear values */
     void Clear(unsigned int nbOfBands, unsigned int nbOfSamples)
     {
-      InternalValueType zeroValue = itk::NumericTraits<InternalValueType>::Zero;
-      InternalValueType supValue = itk::NumericTraits<InternalValueType>::max();
-      InternalValueType infValue = itk::NumericTraits<InternalValueType>::NonpositiveMin();
+      InternalValueType zeroValue  = itk::NumericTraits<InternalValueType>::Zero;
+      InternalValueType supValue   = itk::NumericTraits<InternalValueType>::max();
+      InternalValueType infValue   = itk::NumericTraits<InternalValueType>::NonpositiveMin();
 
-      m_count = vnl_vector<long>(nbOfSamples,0);
-      m_sum = vnl_matrix<InternalValueType>(nbOfBands,nbOfSamples,zeroValue);
-      m_cosum = vnl_matrix<InternalValueType>(nbOfBands,nbOfSamples,zeroValue);
-      m_sqSum = vnl_matrix<InternalValueType>(nbOfBands,nbOfSamples,zeroValue);
-      m_min = vnl_matrix<InternalValueType>(nbOfBands,nbOfSamples,supValue);
-      m_max = vnl_matrix<InternalValueType>(nbOfBands,nbOfSamples,infValue);
+      m_count   = LongVectorType(nbOfSamples,0);
+      m_sum     = RealMatrixType(nbOfBands,nbOfSamples,zeroValue);
+      m_cosum   = RealMatrixType(nbOfBands,nbOfSamples,zeroValue);
+      m_sqSum   = RealMatrixType(nbOfBands,nbOfSamples,zeroValue);
+      m_min     = RealMatrixType(nbOfBands,nbOfSamples,supValue);
+      m_max     = RealMatrixType(nbOfBands,nbOfSamples,infValue);
     }
 
     /* Pixel update */
@@ -218,23 +275,198 @@ public:
         }
     }
 
-    vnl_matrix<InternalValueType> m_sum;
-    vnl_matrix<InternalValueType> m_sqSum;
-    vnl_matrix<InternalValueType> m_cosum;
-    vnl_matrix<InternalValueType> m_min;
-    vnl_matrix<InternalValueType> m_max;
-    vnl_vector<long>              m_count;
+    RealMatrixType   m_sum;
+    RealMatrixType   m_sqSum;
+    RealMatrixType   m_cosum;
+    RealMatrixType   m_min;
+    RealMatrixType   m_max;
+    LongVectorType   m_count;
   };
 
+  // Internal threads count
+  std::vector<ThreadResultsContainer> internalThreadResults;
+
   // Results
-  std::vector<ThreadResultsContainer> m_ThreadResults;
-  ThreadResultsContainer              m_FinalResults;
+  RealMatrixListType m_Means;
+  RealMatrixListType m_Stds;
+  RealMatrixListType m_ProdMeans;
+  RealMatrixListType m_Mins;
+  RealMatrixListType m_Maxs;
+  LongMatrixType     m_Area;
 
 private:
-  StreamingStatisticsMosaicFilter(const Self&); //purposely not implemented
+  PersistentStatisticsMosaicFilter(const Self&); //purposely not implemented
   void operator=(const Self&);                  //purposely not implemented
 
 }; // end of class
+
+
+
+/*
+ * Decorator
+ */
+template<class TInputImage,class TOutputImage,class TInternalValueType>
+class ITK_EXPORT StreamingStatisticsMosaicFilter :
+  public PersistentFilterStreamingDecorator<
+  PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType> >
+{
+public:
+  /** Standard Self typedef */
+  typedef StreamingStatisticsMosaicFilter Self;
+  typedef PersistentFilterStreamingDecorator
+  <PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType> > Superclass;
+  typedef itk::SmartPointer<Self>       Pointer;
+  typedef itk::SmartPointer<const Self> ConstPointer;
+
+  /** Type macro */
+  itkNewMacro(Self);
+
+  /** Creation through object factory macro */
+  itkTypeMacro(StreamingStatisticsMosaicFilter, PersistentFilterStreamingDecorator);
+
+  /** Typedefs for statistics */
+  typedef typename Superclass::FilterType::RealMatrixListType          RealMatrixListType;
+  typedef typename Superclass::FilterType::LongMatrixType              LongMatrixType;
+  typedef typename Superclass::FilterType::RealMatrixListObjectType    RealMatrixListObjectType;
+  typedef typename Superclass::FilterType::LongMatrixObjectType        LongMatrixObjectType;
+
+  /** Input image typedefs.  */
+  typedef typename Superclass::FilterType::InputImageType              InputImageType;
+  typedef typename Superclass::FilterType::InputImagePointer           InputImagePointer;
+  typedef typename Superclass::FilterType::InputImagePointType         InputImagePointType;
+  typedef typename Superclass::FilterType::InputImagePixelType         InputImagePixelType;
+  typedef typename Superclass::FilterType::InputImageIndexType         InputImageIndexType;
+  typedef typename Superclass::FilterType::InputImageSizeType          InputImageSizeType;
+  typedef typename Superclass::FilterType::InputImageSpacingType       InputImageSpacingType;
+  typedef typename Superclass::FilterType::InputImageInternalPixelType InputImageInternalPixelType;
+  typedef typename Superclass::FilterType::InputImageRegionType        InputImageRegionType;
+
+  /** Output image typedefs.  */
+  typedef typename Superclass::FilterType::OutputImageType              OutputImageType;
+  typedef typename Superclass::FilterType::OutputImagePointer           OutputImagePointer;
+  typedef typename Superclass::FilterType::OutputImagePointType         OutputImagePointType;
+  typedef typename Superclass::FilterType::OutputImagePixelType         OutputImagePixelType;
+  typedef typename Superclass::FilterType::OutputImageIndexType         OutputImageIndexType;
+  typedef typename Superclass::FilterType::OutputImageSizeType          OutputImageSizeType;
+  typedef typename Superclass::FilterType::OutputImageSpacingType       OutputImageSpacingType;
+  typedef typename Superclass::FilterType::OutputImageInternalPixelType OutputImageInternalPixelType;
+  typedef typename Superclass::FilterType::OutputImageRegionType        OutputImageRegionType;
+
+  /** Internal computing typedef support. */
+  typedef typename Superclass::FilterType::InternalValueType       InternalValueType;
+  typedef typename Superclass::FilterType::ContinuousIndexType     ContinuousIndexType;
+  typedef typename Superclass::FilterType::InterpolatorType        InterpolatorType;
+  typedef typename Superclass::FilterType::InterpolatorPointerType InterpolatorPointerType;
+  typedef typename Superclass::FilterType::DefaultInterpolatorType DefaultInterpolatorType;
+  typedef typename Superclass::FilterType::InternalImageType       InternalImageType;
+  typedef typename Superclass::FilterType::InternalPixelType       InternalPixelType;
+  typedef typename Superclass::FilterType::IteratorType            IteratorType;
+  typedef typename Superclass::FilterType::ConstIteratorType       ConstIteratorType;
+  typedef typename Superclass::FilterType::StreamingTraitsType     StreamingTraitsType;
+
+  using Superclass::PushBackInput;
+  void PushBackInput(InputImageType * input)
+  {
+    this->GetFilter()->PushBackInput(input);
+  }
+
+//  otbSetObjectMemberMacro(Filter, NoDataValue, RealType);
+//  otbGetObjectMemberMacro(Filter, NoDataValue, RealType);
+
+  /** Return the computed Means. */
+  RealMatrixListType GetMeans() const
+  {
+    return this->GetFilter()->GetMeansOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMeansOutput()
+  {
+    return this->GetFilter()->GetMeansOutput();
+  }
+  const RealMatrixListObjectType* GetMeansOutput() const
+  {
+    return this->GetFilter()->GetMeansOutput();
+  }
+
+  /** Return the computed Stds. */
+  RealMatrixListType GetStds() const
+  {
+    return this->GetFilter()->GetStdsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetStdsOutput()
+  {
+    return this->GetFilter()->GetStdsOutput();
+  }
+  const RealMatrixListObjectType* GetStdsOutput() const
+  {
+    return this->GetFilter()->GetStdsOutput();
+  }
+
+  /** Return the computed MeansOfProducts. */
+  RealMatrixListType GetMeansOfProducts() const
+  {
+    return this->GetFilter()->GetMeansOfProductsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMeansOfProductsOutput()
+  {
+    return this->GetFilter()->GetMeansOfProductsOutput();
+  }
+  const RealMatrixListObjectType* GetMeansOfProductsOutput() const
+  {
+    return this->GetFilter()->GetMeansOfProductsOutput();
+  }
+
+  /** Return the computed Mins. */
+  RealMatrixListType GetMins() const
+  {
+    return this->GetFilter()->GetMinsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMinsOutput()
+  {
+    return this->GetFilter()->GetMinsOutput();
+  }
+  const RealMatrixListObjectType* GetMinsOutput() const
+  {
+    return this->GetFilter()->GetMinsOutput();
+  }
+
+  /** Return the computed Maxs. */
+  RealMatrixListType GetMaxs() const
+  {
+    return this->GetFilter()->GetMaxsOutput()->Get();
+  }
+  RealMatrixListObjectType* GetMaxsOutput()
+  {
+    return this->GetFilter()->GetMaxsOutput();
+  }
+  const RealMatrixListObjectType* GetMaxsOutput() const
+  {
+    return this->GetFilter()->GetMaxsOutput();
+  }
+
+  /** Return the computed Areas. */
+  LongMatrixType GetAreas() const
+  {
+    return this->GetFilter()->GetAreasOutput()->Get();
+  }
+  LongMatrixObjectType* GetAreasOutput()
+  {
+    return this->GetFilter()->GetAreasOutput();
+  }
+  const LongMatrixObjectType* GetAreasOutput() const
+  {
+    return this->GetFilter()->GetAreasOutput();
+  }
+
+protected:
+  /** Constructor */
+  StreamingStatisticsMosaicFilter() {};
+  /** Destructor */
+  ~StreamingStatisticsMosaicFilter() ITK_OVERRIDE {}
+
+private:
+  StreamingStatisticsMosaicFilter(const Self &); //purposely not implemented
+  void operator =(const Self&); //purposely not implemented
+};
 
 } // end namespace otb
 

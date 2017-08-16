@@ -6,29 +6,283 @@
 namespace otb {
 
 template <class TInputImage, class TOutputImage, class TInternalValueType>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::StreamingStatisticsMosaicFilter(){
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::PersistentStatisticsMosaicFilter(){
+
+  // allocate the data objects for the outputs which are
+  // just decorators around pixel types
+  // 1: means
+  // 2: stdevs
+  // 3: means of products
+  // 4: mins
+  // 5: maxs
+  for (int i = 1; i < 6; ++i)
+    {
+    typename RealMatrixListObjectType::Pointer output
+    = static_cast<RealMatrixListObjectType*>(this->MakeOutput(i).GetPointer());
+    this->itk::ProcessObject::SetNthOutput(i, output.GetPointer());
+    }
+
+  // allocate the data objects for the outputs which are
+  // just decorators around real matrices
+  //
+  // 6: count
+  typename LongMatrixObjectType::Pointer output
+  = static_cast<LongMatrixObjectType*>(this->MakeOutput(6).GetPointer());
+  this->itk::ProcessObject::SetNthOutput(6, output.GetPointer());
+
 }
 
 /*
- * Extra initialization
+ * Make output
+ */
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename itk::DataObject::Pointer
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::MakeOutput(DataObjectPointerArraySizeType output)
+{
+  itkDebugMacro( << "Entering MakeOutput(" << output << ")" );
+  if (output == 0)
+    {
+    return static_cast<itk::DataObject*>(TOutputImage::New().GetPointer());
+    }
+  else if (output == 6)
+    {
+    return static_cast<itk::DataObject*>(LongMatrixObjectType::New().GetPointer());
+    }
+  return static_cast<itk::DataObject*>(RealMatrixListObjectType::New().GetPointer());
+
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMeansOutput()
+{
+  return static_cast<RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(1));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetStdsOutput()
+{
+  return static_cast<RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(2));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMeansOfProductsOutput()
+{
+  return static_cast<RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(3));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMinsOutput()
+{
+  return static_cast<RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(4));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMaxsOutput()
+{
+  return static_cast<RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(5));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::LongMatrixObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetAreasOutput()
+{
+  return static_cast<LongMatrixObjectType*>(this->itk::ProcessObject::GetOutput(6));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMeansOutput() const
+{
+  return static_cast<const RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(1));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetStdsOutput() const
+{
+  return static_cast<const RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(2));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMeansOfProductsOutput() const
+{
+  return static_cast<const RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(3));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMinsOutput() const
+{
+  return static_cast<const RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(4));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixListObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetMaxsOutput() const
+{
+  return static_cast<const RealMatrixListObjectType*>(this->itk::ProcessObject::GetOutput(5));
+}
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::LongMatrixObjectType*
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::GetAreasOutput() const
+{
+  return static_cast<const LongMatrixObjectType*>(this->itk::ProcessObject::GetOutput(6));
+}
+
+/**
+ * Reset() implementation
  */
 template <class TInputImage, class TOutputImage, class TInternalValueType>
 void
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GenerateOutputInformation()
-{
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::Reset()
+ {
+  itkDebugMacro( << "Entering Reset()" );
+
   Superclass::GenerateOutputInformation();
 
-  OutputImageType * outputPtr = this->GetOutput();
+  // Prepare threads result
+  const unsigned int numberOfThreads = this->GetNumberOfThreads();
+  unsigned int nBands = this->GetNumberOfBands();
+  unsigned int nbImages = this->GetNumberOfInputImages();
 
-  outputPtr->SetNumberOfComponentsPerPixel( 1 );
+  itkDebugMacro ( << "\nN threads: " << numberOfThreads <<
+      "\nN bands: " << nBands <<
+      "\nN images: " << nbImages );
 
-  // Prepare final results
+  internalThreadResults.clear();
+  for (unsigned int threadId = 0 ; threadId < numberOfThreads ; threadId++)
+    {
+    // Create a clean empty container for each thread
+    ThreadResultsContainer threadResult(nBands,nbImages*nbImages);
+    internalThreadResults.push_back(threadResult);
+    }
+
+ }
+
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+void
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::AllocateOutputs()
+{
+  itkDebugMacro( << "Entering AllocateOutputs()" );
+  // This is commented to prevent the streaming of the whole image for the first stream strip
+  // It shall not cause any problem because the output image of this filter is not intended to be used.
+  //InputImagePointer image = const_cast< TInputImage * >( this->GetInput() );
+  //this->GraftOutput( image );
+  // Nothing that needs to be allocated for the remaining outputs
+}
+
+/*
+ * Synthetize() implementation
+ */
+template <class TInputImage, class TOutputImage, class TInternalValueType>
+void
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+::Synthetize()
+{
+  itkDebugMacro( << "Entering Synthetize()" );
+
   unsigned int nBands = Superclass::GetNumberOfBands();
   unsigned int nbImages = this->GetNumberOfInputImages();
-  m_FinalResults = ThreadResultsContainer(nBands,nbImages*nbImages);
+  const unsigned int numberOfThreads = this->GetNumberOfThreads();
 
+  // Merge threads result
+  ThreadResultsContainer finalResults = ThreadResultsContainer(nBands,nbImages*nbImages);
+  for (unsigned int threadId = 0 ; threadId < numberOfThreads ; threadId++)
+    {
+    finalResults.Update(internalThreadResults.at(threadId) );
+    }
+
+  // Compute final outputs
+  m_Means.clear();
+  m_Stds.clear();
+  m_ProdMeans.clear();
+  m_Mins.clear();
+  m_Maxs.clear();
+  m_Area = LongMatrixType(nbImages,nbImages,0);
+
+  for (unsigned int band = 0 ; band < nBands ; band++)
+    {
+    RealMatrixType mean    (nbImages, nbImages, 0);
+    RealMatrixType prodmean(nbImages, nbImages, 0);
+    RealMatrixType stdev   (nbImages, nbImages, 0);
+    RealMatrixType min     (nbImages, nbImages, itk::NumericTraits<InputImageInternalPixelType>::max() );
+    RealMatrixType max     (nbImages, nbImages, itk::NumericTraits<InputImageInternalPixelType>::NonpositiveMin() );
+
+    for (unsigned int i = 0 ; i < nbImages ; i++)
+      {
+      for (unsigned int j = 0 ; j < nbImages ; j++)
+        {
+
+        long              count    = finalResults.m_count[i*nbImages+j];
+        InternalValueType sum      = finalResults.m_sum[band][i*nbImages+j];
+        InternalValueType cosum    = finalResults.m_cosum[band][i*nbImages+j];
+        InternalValueType sqSum    = finalResults.m_sqSum[band][i*nbImages+j];
+        InternalValueType minValue = finalResults.m_min[band][i*nbImages+j];
+        InternalValueType maxValue = finalResults.m_max[band][i*nbImages+j];
+
+        // Update area
+        m_Area[i][j] = count;
+
+        // Update Min and Max
+        if (minValue < min[i][j])
+          min[i][j] = minValue;
+        if (maxValue > max[i][j])
+          max[i][j] = maxValue;
+
+        // Update Mean, Std and Mean of products
+        if (count > 0)
+          {
+          mean[i][j]      = sum   / (static_cast<InternalValueType>(count) );
+          prodmean[i][j]  = cosum / (static_cast<InternalValueType>(count) );
+          // Unbiased estimate
+          InternalValueType variance = (sqSum - (sum*sum
+              / static_cast<InternalValueType>(count) ) )
+                    / (static_cast<InternalValueType>(count) - 1);
+          if (variance > 0)
+            {
+            stdev[i][j] = vcl_sqrt(variance);
+            }
+
+          }
+        }
+      }
+    m_Means.push_back(mean);
+    m_Stds.push_back(stdev);
+    m_ProdMeans.push_back(prodmean);
+    m_Mins.push_back(min);
+    m_Maxs.push_back(max);
+
+    } // next band
+
+  this->GetMeansOutput()->Set(m_Means);
+  this->GetStdsOutput()->Set(m_Stds);
+  this->GetMeansOfProductsOutput()->Set(m_ProdMeans);
+  this->GetMinsOutput()->Set(m_Mins);
+  this->GetMaxsOutput()->Set(m_Maxs);
+  this->GetAreasOutput()->Set(m_Area);
 }
 
 /**
@@ -36,7 +290,7 @@ StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
  */
 template <class TInputImage, class TOutputImage, class TInternalValueType>
 void
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
+PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 ::ThreadedGenerateData(const OutputImageRegionType& outputRegionForThread, itk::ThreadIdType threadId)
 {
 
@@ -124,227 +378,13 @@ StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
           InputImagePixelType otherPixel = overlapPixelValue.at(j);
 
           // Update
-          //					m_ThreadResults.at(threadId).Update(pixel,
-          // imageIndex*nbImages + otherImageIndex);
-          m_ThreadResults.at(threadId).Update(pixel, otherPixel, imageIndex*nbOfInputImages + otherImageIndex);
+          internalThreadResults.at(threadId).Update(pixel, otherPixel, imageIndex*nbOfInputImages + otherImageIndex);
           }
         }
       } // loop on overlapping pixels
 
-    OutputImagePixelType outPix;
-    outPix.SetSize(1);
-    outPix.Fill( static_cast<OutputImageInternalPixelType>(nbOfOverlappingPixels) );
-    outputIt.Set(outPix);
-
     } // next output pixel
 
-}
-
-/**
- * Setup state of filter before multi-threading.
- * InterpolatorType::SetInputImage is not thread-safe and hence
- * has to be setup before ThreadedGenerateData
- *
- * Each thread result container must be cleared
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-void
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::BeforeThreadedGenerateData()
-{
-
-  Superclass::BeforeThreadedGenerateData();
-
-  // Prepare threads result
-  const unsigned int numberOfThreads = this->GetNumberOfThreads();
-  const unsigned int nbImages = this->GetNumberOfInputs();
-  const unsigned int nBands = this->GetNumberOfBands();
-
-  m_ThreadResults.clear();
-  for (unsigned int threadId = 0 ; threadId < numberOfThreads ; threadId++)
-    {
-    // Create a clean empty container for each thread
-    ThreadResultsContainer threadResult(nBands,nbImages*nbImages);
-    m_ThreadResults.push_back(threadResult);
-    }
-
-}
-
-/**
- * Setup state of filter after multi-threading.
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-void
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::AfterThreadedGenerateData()
-{
-
-  Superclass::AfterThreadedGenerateData();
-
-  // Merge threads result
-  const unsigned int numberOfThreads = this->GetNumberOfThreads();
-
-  for (unsigned int threadId = 0 ; threadId < numberOfThreads ; threadId++)
-    {
-    m_FinalResults.Update(m_ThreadResults.at(threadId) );
-    }
-
-}
-
-/*
- * Get Mean matrix
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-vnl_matrix<typename StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::InternalValueType>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GetMean(unsigned int band)
-{
-  const unsigned int nbImages = this->GetNumberOfInputs();
-
-  vnl_matrix<InternalValueType> res(nbImages,nbImages,0);
-  for (unsigned int i = 0 ; i < nbImages ; i++)
-    {
-    for (unsigned int j = 0 ; j < nbImages ; j++)
-      {
-      InternalValueType sum = m_FinalResults.m_sum[band][i*nbImages+j];
-      long              count = m_FinalResults.m_count[i*nbImages+j];
-      if (count > 0)
-        {
-        res[i][j] = sum / (static_cast<InternalValueType>(count) );
-        }
-      }
-    }
-  return res;
-}
-
-/*
- * Get Product Mean matrix
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-vnl_matrix<typename StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::InternalValueType>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GetProdMean(unsigned int band)
-{
-  const unsigned int nbImages = this->GetNumberOfInputs();
-
-  vnl_matrix<InternalValueType> res(nbImages,nbImages,0);
-  for (unsigned int i = 0 ; i < nbImages ; i++)
-    {
-    for (unsigned int j = 0 ; j < nbImages ; j++)
-      {
-      InternalValueType cosum = m_FinalResults.m_cosum[band][i*nbImages+j];
-      long              count = m_FinalResults.m_count[i*nbImages+j];
-      if (count > 0)
-        {
-        res[i][j] = cosum / (static_cast<InternalValueType>(count) );
-        }
-      }
-    }
-  return res;
-}
-
-/*
- * Get Standard Deviation matrix
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-vnl_matrix<typename StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::InternalValueType>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GetStDev(unsigned int band)
-{
-  const unsigned int nbImages = this->GetNumberOfInputs();
-
-  vnl_matrix<InternalValueType> res(nbImages,nbImages,0);
-  for (unsigned int i = 0 ; i < nbImages ; i++)
-    {
-    for (unsigned int j = 0 ; j < nbImages ; j++)
-      {
-      InternalValueType sum = m_FinalResults.m_sum[band][i*nbImages+j];
-      InternalValueType sqSum = m_FinalResults.m_sqSum[band][i*nbImages+j];
-      long              count = m_FinalResults.m_count[i*nbImages+j];
-      if (count > 1)
-        {
-        // Unbiased estimate
-        InternalValueType variance = (sqSum - (sum*sum
-                                               / static_cast<InternalValueType>(count) ) )
-          / (static_cast<InternalValueType>(count) - 1);
-        if (variance > 0)
-          {
-          res[i][j] = vcl_sqrt(variance);
-          }
-        }
-      }
-    }
-  return res;
-}
-
-/*
- * Get Minimums
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-vnl_vector<typename StreamingStatisticsMosaicFilter<TInputImage, TOutputImage,
-                                                    TInternalValueType>::InputImageInternalPixelType>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GetMin(unsigned int band)
-{
-  const unsigned int nbImages = this->GetNumberOfInputs();
-
-  vnl_vector<InputImageInternalPixelType> res(nbImages,itk::NumericTraits<InputImageInternalPixelType>::max() );
-  for (unsigned int i = 0 ; i < nbImages ; i++)
-    {
-    for (unsigned int j = 0 ; j < nbImages ; j++)
-      {
-      InputImageInternalPixelType value = m_FinalResults.m_min[band][i*nbImages+j];
-      if (value < res[i])
-        res[i] = value;
-      }
-    }
-  return res;
-}
-
-/*
- * Get Maximums
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-vnl_vector<typename StreamingStatisticsMosaicFilter<TInputImage, TOutputImage,
-                                                    TInternalValueType>::InputImageInternalPixelType>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GetMax(unsigned int band)
-{
-  const unsigned int nbImages = this->GetNumberOfInputs();
-
-  vnl_vector<InputImageInternalPixelType> res(nbImages,
-                                              itk::NumericTraits<InputImageInternalPixelType>::NonpositiveMin() );
-  for (unsigned int i = 0 ; i < nbImages ; i++)
-    {
-    for (unsigned int j = 0 ; j < nbImages ; j++)
-      {
-      InputImageInternalPixelType value = m_FinalResults.m_max[band][i*nbImages+j];
-      if (value > res[i])
-        res[i] = value;
-      }
-    }
-  return res;
-}
-
-/*
- * Get Area matrix
- */
-template <class TInputImage, class TOutputImage, class TInternalValueType>
-vnl_matrix<long>
-StreamingStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
-::GetAreaInPixels()
-{
-  const unsigned int nbImages = this->GetNumberOfInputs();
-
-  vnl_matrix<long> res(nbImages,nbImages,0);
-  for (unsigned int i = 0 ; i < nbImages ; i++)
-    {
-    for (unsigned int j = 0 ; j < nbImages ; j++)
-      {
-      res[i][j] = m_FinalResults.m_count[i*nbImages+j];
-      }
-    }
-  return res;
 }
 
 } // end namespace gtb
