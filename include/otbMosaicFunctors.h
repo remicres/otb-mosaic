@@ -16,8 +16,10 @@ namespace otb{
 namespace Functor{
 
 /**
- * \class RGB2LABFunctor
+ * \class RGB2LAB Functor
  * \brief Base class for converting RGB into LAB color space (Ruderman et al.)
+ *
+ * \ingroup OTBMosaic
  */
 template< class TInput, class TOutput>
 class RGB2LAB
@@ -108,6 +110,8 @@ private:
  * \brief Base class for converting LAB into RGB color space (Ruderman et al.)
  *
  * TODO: invert the function RGB2LAB than using the hardcoded one
+ *
+ * \ingroup OTBMosaic
  */
 template< class TInput, class TOutput>
 class LAB2RGB

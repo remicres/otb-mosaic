@@ -21,7 +21,7 @@ namespace otb
  * \sa PersistentMosaicFilter
  * \sa StreamingStatisticsMosaicFilter
   *
- * \ingroup OTBStreaming
+ * \ingroup OTBMosaic
  */
 template <class TInputImage, class TOutputImage, class TPrecisionType>
 class ITK_EXPORT PersistentMosaicFilter : public otb::StreamingMosaicFilterBase<TInputImage, TOutputImage, TPrecisionType>
