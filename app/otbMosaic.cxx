@@ -556,6 +556,10 @@ private:
 
     AddRAMParameter();
 
+    // Doc example
+    SetDocExampleParameterValue("il", "SP67_FR_subset_1.tif SP67_FR_subset_2.tif");
+    SetDocExampleParameterValue("out", "mosaicImage.tif");
+
   }
 
   void DoUpdateParameters()
