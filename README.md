@@ -3,10 +3,6 @@ Summary
 
 This module provides one application dedicated to images mosaicking. 
 
-Mosaic
-----------------------------
-This application computes mosaics of images. 
-
 # Compositing
 
 ## Methods
