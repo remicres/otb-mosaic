@@ -14,60 +14,95 @@
 namespace otb
 {
 
-template <class TOutputImage>
-MosaicFromDirectoryHandler<TOutputImage>
+template <class TOutputImage, class TReferenceImage>
+MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
 ::MosaicFromDirectoryHandler()
  {
   mosaicFilter = MosaicFilterType::New();
   castFilter = CastFilterType::New();
+  m_UseReferenceImage = false;
+  m_RefImagePtr = 0;
  }
 
-template <class TOutputImage>
-MosaicFromDirectoryHandler<TOutputImage>
+template <class TOutputImage, class TReferenceImage>
+MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
 ::~MosaicFromDirectoryHandler()
 {
 }
 
-template <class TOutputImage>
+template <class TOutputImage, class TReferenceImage>
 void
-MosaicFromDirectoryHandler<TOutputImage>
-::SetDirectory(std::string directory)
+MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
+::GenerateOutputInformation()
  {
-  if (directory[directory.size()-1] != '/')
+  if (m_Directory[m_Directory.size()-1] != '/')
     {
     // If not, we add the separator
-    directory.append("/");
+    m_Directory.append("/");
     }
 
   // Get the list of files in the directory
   itk::Directory::Pointer dir = itk::Directory::New();
-  if (!dir->Load(directory.c_str()))
+  if (!dir->Load(m_Directory.c_str()))
     {
-    itkExceptionMacro(<< "Unable to browse directory " << directory);
+    itkExceptionMacro(<< "Unable to browse directory " << m_Directory);
     }
 
   // Instanciate a new mosaic filter
   mosaicFilter = MosaicFilterType::New();
   mosaicFilter->SetGlobalWarningDisplay(false);
   readers.clear();
+  resamplers.clear();
 
   // Browse the directory
   for (unsigned int i = 0; i < dir->GetNumberOfFiles(); i++)
     {
     const char *filename = dir->GetFile(i);
     std::string sfilename(filename);
-    sfilename = directory + sfilename;
+    sfilename = m_Directory + sfilename;
 
     // Try to read the file
     otb::ImageIOBase::Pointer imageIO =
         otb::ImageIOFactory::CreateImageIO(sfilename.c_str(),otb::ImageIOFactory::ReadMode);
     if( imageIO.IsNotNull() )
       {
-      ReaderPointerType reader = ReaderType::New();
-      reader->SetFileName(sfilename);
-      reader->UpdateOutputInformation();
-      readers.push_back(reader);
-      mosaicFilter->PushBackInput(reader->GetOutput());
+        // create reader
+        ReaderPointerType reader = ReaderType::New();
+        reader->SetFileName(sfilename);
+        reader->UpdateOutputInformation();
+
+        readers.push_back(reader);
+
+        if (m_UseReferenceImage)
+          {
+            ResamplerPointerType resampler = ResamplerType::New();
+            resampler->SetInput(reader->GetOutput());
+
+            // Setup transform through projRef and Keywordlist
+            SpacingType defSpacing = m_RefImagePtr->GetSpacing();
+            defSpacing[0] *= 10;
+            defSpacing[1] *= 10;
+            resampler->SetDisplacementFieldSpacing(defSpacing);
+            resampler->SetInputKeywordList(reader->GetOutput()->GetImageKeywordlist());
+            resampler->SetInputProjectionRef(reader->GetOutput()->GetProjectionRef());
+            resampler->SetOutputKeywordList(m_RefImagePtr->GetImageKeywordlist());
+            resampler->SetOutputProjectionRef(m_RefImagePtr->GetProjectionRef());
+            resampler->SetOutputOrigin(m_RefImagePtr->GetOrigin());
+            resampler->SetOutputSpacing(m_RefImagePtr->GetSpacing());
+            resampler->SetOutputSize(m_RefImagePtr->GetLargestPossibleRegion().GetSize());
+            resampler->SetOutputStartIndex(m_RefImagePtr->GetLargestPossibleRegion().GetIndex());
+
+            typename NNInterpolatorType::Pointer interpolator = NNInterpolatorType::New();
+            resampler->SetInterpolator(interpolator);
+
+            resamplers.push_back(resampler);
+
+            mosaicFilter->PushBackInput(resampler->GetOutput());
+          }
+        else
+          {
+            mosaicFilter->PushBackInput(reader->GetOutput());
+          }
       }
     else
       {
@@ -76,16 +111,18 @@ MosaicFromDirectoryHandler<TOutputImage>
 
     }
 
- }
-
-template <class TOutputImage>
-void
-MosaicFromDirectoryHandler<TOutputImage>
-::GenerateOutputInformation()
- {
-  mosaicFilter->SetOutputOrigin(m_OutputOrigin);
-  mosaicFilter->SetOutputSpacing(m_OutputSpacing);
-  mosaicFilter->SetOutputSize(m_OutputSize);
+  if (m_UseReferenceImage)
+    {
+      mosaicFilter->SetOutputOrigin(m_RefImagePtr->GetOrigin());
+      mosaicFilter->SetOutputSpacing(m_RefImagePtr->GetSpacing());
+      mosaicFilter->SetOutputSize(m_RefImagePtr->GetLargestPossibleRegion().GetSize());
+    }
+  else
+    {
+      mosaicFilter->SetOutputOrigin(m_OutputOrigin);
+      mosaicFilter->SetOutputSpacing(m_OutputSpacing);
+      mosaicFilter->SetOutputSize(m_OutputSize);
+    }
   mosaicFilter->SetAutomaticOutputParametersComputation(false);
 
   castFilter->SetInput(mosaicFilter->GetOutput());
@@ -95,9 +132,9 @@ MosaicFromDirectoryHandler<TOutputImage>
   this->GraftOutput( castFilter->GetOutput() );
  }
 
-template <class TOutputImage>
+template <class TOutputImage, class TReferenceImage>
 void
-MosaicFromDirectoryHandler<TOutputImage>
+MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
 ::GenerateData()
  {
   castFilter->GraftOutput( this->GetOutput() );
