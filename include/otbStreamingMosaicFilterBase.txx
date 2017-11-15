@@ -15,7 +15,7 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
   m_ShiftScaleInputImages = false;
   m_AutomaticOutputParametersComputation = true;
   Superclass::SetCoordinateTolerance(itk::NumericTraits<double>::max() );
-
+  Superclass::SetDirectionTolerance(itk::NumericTraits<double>::max() );
 }
 
 /**
