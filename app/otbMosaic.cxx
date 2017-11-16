@@ -635,22 +635,44 @@ private:
                                                   DoubleImageType,
                                                   DoubleImageType> ApproximateSignedDistanceMapImageFilterType;
     typedef otb::ImageFileWriter<DoubleImageType>                                         WriterType;
-    typedef itk::ConstantPadImageFilter<UInt8MaskImageType, UInt8MaskImageType>           PadFilterType;
+//    typedef itk::ConstantPadImageFilter<UInt8MaskImageType, UInt8MaskImageType>           PadFilterType;
+    typedef otb::StreamingResampleImageFilter<UInt8MaskImageType,UInt8MaskImageType>      PadFilterType;
 
     // Read the binary mask image
     UInt8MaskReaderType::Pointer reader = UInt8MaskReaderType::New();
     reader->SetFileName(inputBinaryMaskFileName);
 
-    // Pad the image
+    // TODO: since ITK4.13 (enforce positive spacing) we can't use this anymore :(
+    // the Quick and dirty fix consists in using a Resample image filter...
+
+//    // Pad the image
+//    const unsigned int paddingRadius = 2;
+//    PadFilterType::Pointer padFilter = PadFilterType::New();
+//    padFilter->SetConstant(itk::NumericTraits<UInt8MaskImageType::InternalPixelType>::max() );
+//    padFilter->SetInput(reader->GetOutput() );
+//    UInt8MaskImageType::SizeType padLowerBound; padLowerBound.Fill(paddingRadius);
+//    UInt8MaskImageType::SizeType padUpperBound; padUpperBound.Fill(paddingRadius);
+//    padFilter->SetPadLowerBound(padLowerBound);
+//    padFilter->SetPadUpperBound(padUpperBound);
+//    padFilter->UpdateOutputInformation();
+
+    // Pad the image (Q&D fix)
     const unsigned int paddingRadius = 2;
+    reader->UpdateOutputInformation();
+    UInt8MaskImageType::SizeType size = reader->GetOutput()->GetLargestPossibleRegion().GetSize();
+    size[0] += 2 * paddingRadius;
+    size[1] += 2 * paddingRadius;
+    UInt8MaskImageType::SpacingType spacing = reader->GetOutput()->GetSignedSpacing();
+    UInt8MaskImageType::PointType origin = reader->GetOutput()->GetOrigin();
+    origin[0] -= static_cast<UInt8MaskImageType::PointType::ValueType>(paddingRadius) * spacing[0];
+    origin[1] -= static_cast<UInt8MaskImageType::PointType::ValueType>(paddingRadius) * spacing[1];
+
     PadFilterType::Pointer padFilter = PadFilterType::New();
-    padFilter->SetConstant(itk::NumericTraits<UInt8MaskImageType::InternalPixelType>::max() );
-    padFilter->SetInput(reader->GetOutput() );
-    UInt8MaskImageType::SizeType padLowerBound; padLowerBound.Fill(paddingRadius);
-    UInt8MaskImageType::SizeType padUpperBound; padUpperBound.Fill(paddingRadius);
-    padFilter->SetPadLowerBound(padLowerBound);
-    padFilter->SetPadUpperBound(padUpperBound);
-    padFilter->UpdateOutputInformation();
+    padFilter->SetInput( reader->GetOutput() );
+    padFilter->SetOutputOrigin(origin);
+    padFilter->SetOutputSpacing(spacing);
+    padFilter->SetOutputSize(size);
+    padFilter->SetEdgePaddingValue( itk::NumericTraits<UInt8MaskImageType::InternalPixelType>::max() );
 
     // Compute the approximate signed distance image
     ApproximateSignedDistanceMapImageFilterType::Pointer approximateSignedDistanceMapImageFilter =
