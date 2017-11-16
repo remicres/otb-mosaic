@@ -223,9 +223,9 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
     // Update mosaïc spacing (keep the nearest of 0)
     for(unsigned int dim = 0; dim<OutputImageType::ImageDimension; ++dim)
       {
-      if (vcl_abs(currentImage->GetSpacing()[dim]) < vcl_abs(m_OutputSpacing[dim]) )
+      if (vcl_abs(currentImage->GetSignedSpacing()[dim]) < vcl_abs(m_OutputSpacing[dim]) )
         {
-        m_OutputSpacing[dim] = currentImage->GetSpacing()[dim];
+        m_OutputSpacing[dim] = currentImage->GetSignedSpacing()[dim];
         }
       }
 
@@ -297,7 +297,7 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
         Superclass::ProcessObject::GetInput(imageIndex) );
 
     itkDebugMacro( << "\tSize   : " << currentImage->GetLargestPossibleRegion().GetSize() );
-    itkDebugMacro( << "\tSpacing: " << currentImage->GetSpacing() );
+    itkDebugMacro( << "\tSpacing: " << currentImage->GetSignedSpacing() );
     itkDebugMacro( << "\tOrigin : " << currentImage->GetOrigin() );
 
     // Update number of bands (keep the max)
@@ -364,7 +364,7 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
   OutputImageRegionType outputRegion(outputRegionStart, m_OutputSize);
   OutputImageType *     outputPtr = this->GetOutput();
   outputPtr->SetOrigin ( m_OutputOrigin );
-  outputPtr->SetSpacing ( m_OutputSpacing );
+  outputPtr->SetSignedSpacing ( m_OutputSpacing );
   outputPtr->SetNumberOfComponentsPerPixel( nbOfBands );
   outputPtr->SetLargestPossibleRegion( outputRegion );
   outputPtr->SetNumberOfComponentsPerPixel( nbOfBands );

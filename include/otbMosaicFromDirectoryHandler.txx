@@ -79,7 +79,7 @@ MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
             resampler->SetInput(reader->GetOutput());
 
             // Setup transform through projRef and Keywordlist
-            SpacingType defSpacing = m_RefImagePtr->GetSpacing();
+            SpacingType defSpacing = m_RefImagePtr->GetSignedSpacing();
             defSpacing[0] *= 10;
             defSpacing[1] *= 10;
             resampler->SetDisplacementFieldSpacing(defSpacing);
@@ -88,7 +88,7 @@ MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
             resampler->SetOutputKeywordList(m_RefImagePtr->GetImageKeywordlist());
             resampler->SetOutputProjectionRef(m_RefImagePtr->GetProjectionRef());
             resampler->SetOutputOrigin(m_RefImagePtr->GetOrigin());
-            resampler->SetOutputSpacing(m_RefImagePtr->GetSpacing());
+            resampler->SetOutputSpacing(m_RefImagePtr->GetSignedSpacing());
             resampler->SetOutputSize(m_RefImagePtr->GetLargestPossibleRegion().GetSize());
             resampler->SetOutputStartIndex(m_RefImagePtr->GetLargestPossibleRegion().GetIndex());
 
@@ -114,7 +114,7 @@ MosaicFromDirectoryHandler<TOutputImage, TReferenceImage>
   if (m_UseReferenceImage)
     {
       mosaicFilter->SetOutputOrigin(m_RefImagePtr->GetOrigin());
-      mosaicFilter->SetOutputSpacing(m_RefImagePtr->GetSpacing());
+      mosaicFilter->SetOutputSpacing(m_RefImagePtr->GetSignedSpacing());
       mosaicFilter->SetOutputSize(m_RefImagePtr->GetLargestPossibleRegion().GetSize());
     }
   else

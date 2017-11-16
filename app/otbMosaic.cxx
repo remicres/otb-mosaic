@@ -589,7 +589,7 @@ private:
     outputSize[0] /= spacingRatio;
     outputSize[1] /= spacingRatio;
     rasterizer->SetOutputSize(outputSize);
-    LabelImageType::SpacingType outputSpacing = reference->GetSpacing();
+    LabelImageType::SpacingType outputSpacing = reference->GetSignedSpacing();
     outputSpacing[0] *= spacingRatio;
     outputSpacing[1] *= spacingRatio;
     rasterizer->SetOutputSpacing(outputSpacing);
@@ -696,7 +696,7 @@ private:
     outputSize[0] = outputSize[0] / spacingRatio + 1;
     outputSize[1] = outputSize[1] / spacingRatio + 1;
     resampler->SetOutputSize(outputSize);
-    LabelImageType::SpacingType outputSpacing = thresholdFilter->GetOutput()->GetSpacing();
+    LabelImageType::SpacingType outputSpacing = thresholdFilter->GetOutput()->GetSignedSpacing();
     outputSpacing[0] *= spacingRatio;
     outputSpacing[1] *= spacingRatio;
     resampler->SetOutputSpacing(outputSpacing);
