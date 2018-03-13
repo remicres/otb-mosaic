@@ -16,6 +16,8 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
   m_AutomaticOutputParametersComputation = true;
   Superclass::SetCoordinateTolerance(itk::NumericTraits<double>::max() );
   Superclass::SetDirectionTolerance(itk::NumericTraits<double>::max() );
+  interpolatorRadius = 0;
+  nbOfBands = 0;
 }
 
 /**
@@ -63,10 +65,7 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
 
   // Mosaic Region Start & End (mosaic image index)
   OutputImageIndexType outIndexStart = outputRegion.GetIndex();
-  OutputImageIndexType outIndexEnd;
-
-  for(unsigned int dim = 0; dim < OutputImageType::ImageDimension; ++dim)
-    outIndexEnd[dim]= outIndexStart[dim] + outputRegion.GetSize()[dim]-1;
+  OutputImageIndexType outIndexEnd = outputRegion.GetUpperIndex();
 
   // Mosaic Region Start & End (geo)
   OutputImagePointType outPointStart, outPointEnd;
@@ -129,10 +128,8 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
     // Image does not overlap requested region: set requested region to null
     itkDebugMacro( <<  "Image #" << inputImageIndex << "\n"
                    << inRegion << " is outside the requested region");
-    InputImageSizeType  nullSize; nullSize.Fill(0) ;
-    InputImageIndexType nullIndex; nullIndex.Fill(0);
-    inRegion.SetIndex(nullIndex);
-    inRegion.SetSize(nullSize);
+    inRegion.GetModifiableSize().Fill(0);
+    inRegion.GetModifiableIndex().Fill(0);
     }
   inputTile->SetRequestedRegion(inRegion);
 }
@@ -205,12 +202,9 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
 
   // Initialize extent and spacing
   OutputImagePointType extentInf, extentSup;
-  for(unsigned int dim = 0; dim<OutputImageType::ImageDimension; ++dim)
-    {
-    m_OutputSpacing[dim] = itk::NumericTraits<double>::max();
-    extentInf[dim] = itk::NumericTraits<double>::max();
-    extentSup[dim] = itk::NumericTraits<double>::NonpositiveMin();
-    }
+  m_OutputSpacing.Fill(itk::NumericTraits<double>::max());
+  extentInf.Fill(itk::NumericTraits<double>::max());
+  extentSup.Fill(itk::NumericTraits<double>::NonpositiveMin());
 
   // Compute output spacing, size, and origin
   for (unsigned int imageIndex = 0 ; imageIndex < this->GetNumberOfInputs() ; imageIndex++)
@@ -220,7 +214,7 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
     InputImageType * currentImage = static_cast<InputImageType *>(
         Superclass::ProcessObject::GetInput(imageIndex) );
 
-    // Update mosaïc spacing (keep the nearest of 0)
+    // Update mosaic spacing (keep the nearest of 0)
     for(unsigned int dim = 0; dim<OutputImageType::ImageDimension; ++dim)
       {
       if (vcl_abs(currentImage->GetSignedSpacing()[dim]) < vcl_abs(m_OutputSpacing[dim]) )
@@ -236,19 +230,16 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
       {
       extentInf[dim] = vnl_math_min(currentInputImageExtentInf[dim], extentInf[dim]);
       extentSup[dim] = vnl_math_max(currentInputImageExtentSup[dim], extentSup[dim]);
-
       }
     }
-
-  // TODO: Set appropriate size and origin for N-Dim (Standards)
 
   // Set final size
   m_OutputSize[0] = vcl_floor( (extentSup[0] - extentInf[0]) / vcl_abs(m_OutputSpacing[0]) ) + 1;
   m_OutputSize[1] = vcl_floor( (extentSup[1] - extentInf[1]) / vcl_abs(m_OutputSpacing[1]) ) + 1;
 
-  // Set final origin (Upper left convention)
-  m_OutputOrigin[0] =  extentInf[0]; // + 0.5 * mosaicSpacing[0]; // ?
-  m_OutputOrigin[1] =  extentSup[1]; // + 0.5 * mosaicSpacing[1];
+  // Set final origin (Coordinate of the upper left pixel center)
+  m_OutputOrigin[0] =  extentInf[0];
+  m_OutputOrigin[1] =  extentSup[1];
 }
 
 /**
@@ -360,14 +351,14 @@ StreamingMosaicFilterBase<TInputImage, TOutputImage, TInternalValueType>
   maxOutputPixelValue = static_cast<InternalValueType>(itk::NumericTraits<OutputImageInternalPixelType>::max() );
 
   // Output parameters
-  OutputImageIndexType  outputRegionStart; outputRegionStart.Fill(0);
+  OutputImageIndexType  outputRegionStart;
+  outputRegionStart.Fill(0);
   OutputImageRegionType outputRegion(outputRegionStart, m_OutputSize);
   OutputImageType *     outputPtr = this->GetOutput();
   outputPtr->SetOrigin ( m_OutputOrigin );
   outputPtr->SetSignedSpacing ( m_OutputSpacing );
   outputPtr->SetNumberOfComponentsPerPixel( nbOfBands );
   outputPtr->SetLargestPossibleRegion( outputRegion );
-  outputPtr->SetNumberOfComponentsPerPixel( nbOfBands );
 
   itkDebugMacro( << "Output mosaic parameters:"
                  << "\n\tBands  : " << nbOfBands
