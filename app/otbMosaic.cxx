@@ -1222,11 +1222,14 @@ private:
 
   void AfterExecuteAndWriteOutputs()
   {
-    otbAppLogINFO("Clean temporary files");
-    deleteFiles(distanceImageFileNameList);
-    deleteFiles(binaryMaskForStatsFileNameList);
-    deleteFiles(binaryMaskForCutlineFileNameList);
-    otbAppLogINFO("Done");
+    if (distanceImageFileNameList.size() > 0 || binaryMaskForStatsFileNameList.size() > 0 || binaryMaskForCutlineFileNameList.size() > 0)
+      {
+      otbAppLogINFO("Clean temporary files");
+      deleteFiles(distanceImageFileNameList);
+      deleteFiles(binaryMaskForStatsFileNameList);
+      deleteFiles(binaryMaskForCutlineFileNameList);
+      otbAppLogINFO("Done");
+      }
   }   // AfterExecuteAndWriteOutputs()
 
   // Mosaic filters
