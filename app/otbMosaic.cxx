@@ -554,6 +554,10 @@ private:
                             "Can be increased if input images are too big to fit the RAM, or in order to speed up the process");
     SetDefaultParameterFloat("distancemap.sr", 10);
 
+    // no-data value
+    AddParameter(ParameterType_Float, "nodata", "no-data value");
+    MandatoryOff("nodata");
+
     AddRAMParameter();
 
     // Doc example
@@ -901,6 +905,23 @@ private:
   }
 
   /*
+   * Change a mosaic filter no-data value
+   */
+  template <class TMosaicFilterType>
+  void SetNoDataValue(typename TMosaicFilterType::Pointer& filter)
+  {
+    if (this->HasValue("nodata"))
+      {
+      FloatVectorImageType::PixelType nodatapix;
+      filter->UpdateOutputInformation();
+      nodatapix.SetSize(filter->GetOutput()->GetNumberOfComponentsPerPixel());
+      nodatapix.Fill(GetParameterFloat("nodata"));
+      filter->SetNoDataInputPixel(nodatapix);
+      filter->SetNoDataOutputPixel(nodatapix);
+      }
+  }
+
+  /*
    * Configure the mosaic filter:
    * -set interpolator
    * -set output spacing
@@ -913,6 +934,7 @@ private:
     SetInterpolator<TMosaicFilterType>(filter);
     SetCorrectionModel<TMosaicFilterType>(filter);
     SetSpacing<TMosaicFilterType>(filter);
+    SetNoDataValue<TMosaicFilterType>(filter);
   }
 
   template <class TMosaicFilterType>
