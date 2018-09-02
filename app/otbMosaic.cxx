@@ -981,15 +981,19 @@ private:
 
     // Get specified temporary directory
     std::string tmpdir = GetParameterAsString("tmpdir");
-    if (!tmpdir.empty())
+    if (tmpdir.empty())
       {
-      // A temporary directory is specified: we check that it ends with a POSIX separator
-      if (tmpdir[tmpdir.size()-1] != '/')
-        {
-        // If not, we add the separator
-        tmpdir.append("/");
-        }
+      // if tmpdir is empty, we use the same output directory as for the output image
+      tmpdir = itksys::SystemTools::GetFilenamePath(outfname.c_str());
       }
+
+    // We check that it ends with a POSIX separator
+    if (tmpdir[tmpdir.size()-1] != '/')
+      {
+      // If not, we add the separator
+      tmpdir.append("/");
+      }
+
     m_TempFilesPrefix = tmpdir + outbfname;
     otbAppLogINFO(<< "Temporary files prefix is: " << m_TempFilesPrefix);
 
