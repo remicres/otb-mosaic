@@ -436,7 +436,9 @@ private:
     // Documentation
     SetDocName("Mosaic");
     SetDocLongDescription("This application performs mosaicking of images");
-    SetDocLimitations("None");
+    SetDocLimitations("When \"comp\" parameter is different than \"none\", the sampling ratio for "
+        "distance map computation must be adjusted to make input images fit into memory (distance map "
+        "computation is not streamable)");
     SetDocAuthors("Remi Cresson");
     SetDocSeeAlso(" ");
 
