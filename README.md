@@ -11,7 +11,7 @@ This module provides one application dedicated to images mosaicking.
 * Feathering technique (__-comp.feather large__): Blends all images on the maximum overlapping areas (this produces seamless mosaics, but can cause blur effect where images are not perfectly aligned).
 * Feathering technique (__-comp.feather slim__): Blends the last image over earlier ones in areas of overlap, on a given transition distance (seam can be visible from a certain zoom level, but it does not cause blur effect when images are not perfectly aligned)
 
-## Performance tuning: Distance map images samplig ratio
+## Performance tuning: Distance map images sampling ratio
 
 For performance issues, distance map images (used by feathering methods) size can be reduced using __-distancemap.sr__. Indeed, distance map images are computed into a temporary file before the compositing process, because it couldn't be done in a streamable way. That is, the RAM must be enough to compute the entire distance map image from each single input image. Thus, the application provides an option to reduce the size of the distance map images. Setting -distancemap.sr 10 will induce a 0.1x wider distance map image, and will save 100x less RAM. To keep the original input size, just set -alphamasks.spacing 1.0 (Default distance map images size reduction ratio is 10.)
 
