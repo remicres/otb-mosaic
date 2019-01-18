@@ -202,7 +202,6 @@ private:
    */
   string GenerateFileName(string tag, int id)
   {
-    // Create a filename
     string outputFile = m_TempFilesPrefix + "_" + tag + "_" + std::to_string(id) + ".tif";
     return outputFile;
   }
@@ -225,7 +224,7 @@ private:
     AddDocTag(Tags::Raster);
 
     // Input image
-    AddParameter(ParameterType_InputImageList,  "il",   "Input Images");
+    AddParameter(ParameterType_InputImageList, "il",   "Input Images");
     SetParameterDescription("il", "Input images to mosaic");
 
     // Input vector data (cutline)
@@ -947,6 +946,11 @@ private:
                                                   m_DistanceMapImageReader[i]->GetOutput());
         }
       ComputeDistanceOffset<SlimFeatherMosaicFilterType>(m_SlimFeatherMosaicFilter);
+
+      // Set transition length and smoothness
+      m_SlimFeatherMosaicFilter->SetFeatheringTransitionDistance(GetParameterFloat("comp.feather.slim.lenght"));
+      m_SlimFeatherMosaicFilter->SetFeatheringSmoothness(GetParameterFloat("comp.feather.slim.exponent"));
+
       mosaicFilter = static_cast<MosaicFilterType*>(m_SlimFeatherMosaicFilter);
       }
 
@@ -1008,7 +1012,7 @@ private:
   void DoExecute()
   {
     GDALAllRegister();
-
+    m_TemporaryFiles.clear();
     CheckNbOfInputs();
 
     ResolveTemporaryDirectory();
@@ -1037,8 +1041,8 @@ private:
     if (m_TemporaryFiles.size() > 0)
       {
       otbAppLogINFO("Clean temporary files");
-//      for (const auto& file: m_TemporaryFiles)
-//        deleteFile(file);
+      for (const auto& file: m_TemporaryFiles)
+        deleteFile(file);
       }
   }
 
