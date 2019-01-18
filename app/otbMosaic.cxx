@@ -924,12 +924,12 @@ private:
       otbAppLogINFO("Large feathering");
 
       m_LargeFeatherMosaicFilter = LargeFeatherMosaicFilterType::New();
-      cout << "filter ok m_DistanceMapImageReader size=" << m_DistanceMapImageReader.size()  << " m_SourcesForCompositing size=" << m_SourcesForCompositing->Size( )<< endl;
       for (unsigned int i = 0 ; i < m_SourcesForCompositing->Size() ; i++)
         {
          m_LargeFeatherMosaicFilter->PushBackInputs(m_SourcesForCompositing->GetNthElement(i),
                                                    m_DistanceMapImageReader[i]->GetOutput());
         }
+      ComputeDistanceOffset<LargeFeatherMosaicFilterType>(m_LargeFeatherMosaicFilter);
       mosaicFilter = static_cast<MosaicFilterType*>(m_LargeFeatherMosaicFilter);
       }
 
@@ -946,6 +946,7 @@ private:
         m_SlimFeatherMosaicFilter->PushBackInputs(m_SourcesForCompositing->GetNthElement(i),
                                                   m_DistanceMapImageReader[i]->GetOutput());
         }
+      ComputeDistanceOffset<SlimFeatherMosaicFilterType>(m_SlimFeatherMosaicFilter);
       mosaicFilter = static_cast<MosaicFilterType*>(m_SlimFeatherMosaicFilter);
       }
 
