@@ -24,9 +24,6 @@
 // Resample filter
 #include "otbStreamingResampleImageFilter.h"
 
-// Pad image filter
-#include "itkConstantPadImageFilter.h"
-
 // danielson distance image
 #include "itkDanielssonDistanceMapImageFilter.h"
 
@@ -151,7 +148,7 @@ public:
 private:
 
   /*
-   * Create a reader
+   * Create a reader and update its registry
    */
   template<class TReaderType>
   typename TReaderType::Pointer
@@ -166,7 +163,7 @@ private:
   }
 
   /*
-   * Create a mask filter
+   * Create a mask filter and update its registry
    */
   MaskImageFilterType::Pointer
   CreateMaskFilter(FloatVectorImageType::Pointer input, MaskImageType::Pointer mask,
@@ -187,13 +184,7 @@ private:
   void deleteFile(string filename)
   {
     if( remove(filename.c_str() ) != 0 )
-      {
       otbAppLogWARNING( "Error deleting file " << filename );
-      }
-    else
-      {
-      otbAppLogDEBUG( "File " << filename << " successfully deleted" );
-      }
   }
 
   /*
@@ -209,14 +200,19 @@ private:
   void DoInit()
   {
     SetName("Mosaic");
-    SetDescription("Perform mosaicking of input images");
+    SetDescription("Perform a mosaic of input images");
 
     // Documentation
     SetDocName("Mosaic");
-    SetDocLongDescription("This application performs mosaicking of images");
-    SetDocLimitations("When \"comp\" parameter is different than \"none\", the sampling ratio for "
-        "distance map computation must be adjusted to make input images fit into memory (distance map "
-        "computation is not streamable)");
+    SetDocLongDescription("This application performs a mosaic of the input images");
+    SetDocLimitations("1. When \"comp\" parameter is different than \"none\", the sampling ratio for "
+        "distance map computation can be adjusted to make input images fit into memory (distance map "
+        "computation is not streamable)."
+        "2. When \"harmo\" method is not \"none\", an algorithm performs the color harmonization of "
+        "the input images using quadratic programming (QP). The objective function of the QP is a set "
+        "of matrices, each one with size NxN (N being the number of input images). Hence, a large number "
+        "of input images imply that those matrices fit into memory, and this is not related to the "
+        "streaming capability of the application (ram parameter) but intrinsic to the harmonization process.");
     SetDocAuthors("Remi Cresson");
     SetDocSeeAlso(" ");
 
@@ -224,120 +220,137 @@ private:
     AddDocTag(Tags::Raster);
 
     // Input image
-    AddParameter(ParameterType_InputImageList, "il",   "Input Images");
-    SetParameterDescription("il", "Input images to mosaic");
+    AddParameter(ParameterType_InputImageList, "il", "Input Images");
+    SetParameterDescription                   ("il", "Input images to mosaic");
 
     // Input vector data (cutline)
     AddParameter(ParameterType_InputVectorDataList, "vdcut", "Input VectorData for composition");
-    SetParameterDescription("vdcut", "VectorData files to be used for cut input images");
-    MandatoryOff("vdcut");
+    SetParameterDescription                        ("vdcut", "VectorData files to be used for cut input images. "
+        "Must be provided in the same order as the input images.");
+    MandatoryOff                                   ("vdcut");
 
     // Input vector data (statistics masks)
     AddParameter(ParameterType_InputVectorDataList, "vdstats", "Input VectorData for statistics");
-    SetParameterDescription("vdstats", "VectorData files to be used for statistics computation (harmonization)");
-    MandatoryOff("vdstats");
+    SetParameterDescription                        ("vdstats", "VectorData files to be used for statistics computation (harmonization). "
+        "Must be provided in the same order as the input images.");
+    MandatoryOff                                   ("vdstats");
 
     // comp (compositing)
-    AddParameter(ParameterType_Group,"comp","Mosaic compositing mode");
-    SetParameterDescription("comp","This group of parameters sets the mosaic compositing");
+    AddParameter(ParameterType_Group,"comp", "Mosaic compositing mode");
+    SetParameterDescription         ("comp", "This group of parameters sets the mosaic compositing");
 
     // comp.feathering
-    AddParameter(ParameterType_Choice,"comp.feather","Feathering method");
-    SetParameterDescription("comp.feather","Set the feathering method for composition");
+    AddParameter(ParameterType_Choice,"comp.feather", "Feathering method");
+    SetParameterDescription          ("comp.feather", "Set the feathering method for composition");
 
     // comp.feather.none
-    AddChoice("comp.feather.none","The simplest composition mode");
-    SetParameterDescription("comp.feather.none",
-                            "No feathering method is used (Very fast). Images are stacked in overlaps");
+    AddChoice              ("comp.feather.none", "The simplest composition mode");
+    SetParameterDescription("comp.feather.none", "No feathering method is used. Images are stacked in overlaps");
 
     // comp.feather.large
-    AddChoice("comp.feather.large","The large blending composition mode");
-    SetParameterDescription("comp.feather.large",
-                            "Blends all images on the maximum overlapping areas. May generate blur when inputs are not well aligned");
+    AddChoice              ("comp.feather.large", "The large blending composition mode");
+    SetParameterDescription("comp.feather.large", "Blends all images on the maximum overlapping areas. May generate blur when inputs are not well aligned");
 
     // comp.feather.slim
-    AddChoice("comp.feather.slim","The slim blending composition mode");
-    SetParameterDescription("comp.feather.slim",
-                            "Blends the last image over earlier ones in areas of overlap, on a given transition distance");
+    AddChoice              ("comp.feather.slim", "The slim blending composition mode");
+    SetParameterDescription("comp.feather.slim", "Blends the last image over earlier ones in areas of overlap, on a given transition distance");
+
     // comp.feather.slim.exponent (i.e. blending smoothness)
-    AddParameter(ParameterType_Float, "comp.feather.slim.exponent", "Transition smoothness (Unitary exponent = linear transition)");
-    SetDefaultParameterFloat("comp.feather.slim.exponent", 1.0);
-    SetMinimumParameterFloatValue("comp.feather.slim.exponent", 0);
-    MandatoryOff("comp.feather.slim.exponent");
+    AddParameter(ParameterType_Float, "comp.feather.slim.exponent", "Transition smoothness (1.0 = linear transition)");
+    SetDefaultParameterFloat         ("comp.feather.slim.exponent", 1.0);
+    SetMinimumParameterFloatValue    ("comp.feather.slim.exponent", 0);
+    MandatoryOff                     ("comp.feather.slim.exponent");
+
     // comp.feather.slim.lenght (i.e. blending lenght)
     AddParameter(ParameterType_Float, "comp.feather.slim.lenght", "Transition length (In cartographic units)");
-    MandatoryOn("comp.feather.slim.lenght");
-    SetMinimumParameterFloatValue("comp.feather.slim.lenght", 0);
-    MandatoryOff("comp.feather.slim.lenght");
+    MandatoryOn                      ("comp.feather.slim.lenght");
+    SetMinimumParameterFloatValue    ("comp.feather.slim.lenght", 0);
+    MandatoryOff                     ("comp.feather.slim.lenght");
 
     // harmo (harmonization)
-    AddParameter(ParameterType_Group,"harmo","Spectral bands harmonization mode");
-    SetParameterDescription("harmo","This group of parameters tunes the mosaic harmonization");
+    AddParameter(ParameterType_Group,"harmo", "Spectral bands harmonization mode");
+    SetParameterDescription         ("harmo", "This group of parameters tunes the mosaic harmonization");
 
     // harmo.method
     AddParameter(ParameterType_Choice,"harmo.method","harmonization method");
-    SetParameterDescription("harmo.method","Set the harmonization method");
-    AddChoice("harmo.method.none","None");
-    SetParameterDescription("harmo.method.none","No automatic harmonization is done");
-    AddChoice("harmo.method.band","Spectral bands");
-    SetParameterDescription("harmo.method.band",
-                            "Automatic harmonization is performed on each individual spectral band");
-    AddChoice("harmo.method.rgb","True colors");
-    SetParameterDescription("harmo.method.rgb",
-                            "Works on RGB colors only. Use an harmonization method based on quadratic programming in decorrelated color space");
+    SetParameterDescription          ("harmo.method","Set the harmonization method");
+    AddChoice              ("harmo.method.none", "None");
+    SetParameterDescription("harmo.method.none", "No automatic harmonization is done");
+    AddChoice              ("harmo.method.band", "Spectral bands");
+    SetParameterDescription("harmo.method.band", "Automatic harmonization is performed on each individual spectral band");
+    AddChoice              ("harmo.method.rgb", "True colors");
+    SetParameterDescription("harmo.method.rgb", "Works on RGB colors only. Use an harmonization method based on quadratic programming in LAB color space");
 
     // harmo.cost (harmonization cost function)
-    AddParameter(ParameterType_Choice,"harmo.cost","harmonization cost function");
-    SetParameterDescription("harmo.cost","Set the harmonization cost function");
-    AddChoice("harmo.cost.rmse","RMSE based");
+    AddParameter(ParameterType_Choice,"harmo.cost", "harmonization cost function");
+    SetParameterDescription          ("harmo.cost", "Set the harmonization cost function");
+    AddChoice("harmo.cost.rmse", "RMSE based");
     AddChoice("harmo.cost.musig","Mean+Std based");
-    AddChoice("harmo.cost.mu","Mean based");
+    AddChoice("harmo.cost.mu", "Mean based");
 
     // Output image
-    AddParameter(ParameterType_OutputImage,  "out",   "Output image");
-    SetParameterDescription("out"," Output image.");
+    AddParameter(ParameterType_OutputImage,  "out", "Output image");
+    SetParameterDescription                 ("out", "Output image, resulting from the mosaicing process.");
 
     // Interpolators
-    AddParameter(ParameterType_Choice,   "interpolator", "Interpolation");
-    SetParameterDescription("interpolator",
-                            "This group of parameters allows to define how the input image will be interpolated during resampling.");
-    MandatoryOff("interpolator");
-    AddChoice("interpolator.nn",     "Nearest Neighbor interpolation");
-    SetParameterDescription("interpolator.nn",
-                            "Nearest neighbor interpolation leads to poor image quality, but it is fast.");
-    AddChoice("interpolator.bco",    "Bicubic interpolation");
+    AddParameter(ParameterType_Choice, "interpolator", "Interpolation");
+    SetParameterDescription           ("interpolator", "This group of parameters allows to define how the input image will be interpolated during resampling.");
+    MandatoryOff                      ("interpolator");
+
+    // NN
+    AddChoice              ("interpolator.nn", "Nearest Neighbor interpolation");
+    SetParameterDescription("interpolator.nn", "Nearest neighbor interpolation leads to poor image quality, but it is fast.");
+
+    // BCO
+    AddChoice              ("interpolator.bco", "Bicubic interpolation");
+    SetParameterDescription("interpolator.bco", "Bicubic interpolation leads to great image quality, but it is slow.");
     AddParameter(ParameterType_Radius, "interpolator.bco.radius", "Radius for bicubic interpolation");
-    SetParameterDescription("interpolator.bco.radius",
-                            "This parameter allows to control the size of the bicubic interpolation filter. If the target pixel size is higher than the input pixel size, increasing this parameter will reduce aliasing artefacts.");
-    AddChoice("interpolator.linear", "Linear interpolation");
-    SetParameterDescription("interpolator.linear",
-                            "Linear interpolation leads to average image quality but is quite fast");
-    SetDefaultParameterInt("interpolator.bco.radius", 2);
+    SetParameterDescription           ("interpolator.bco.radius", "Size of the bicubic interpolation filter. If the target pixel size "
+        "is higher than the input pixel size, increasing this parameter will reduce aliasing artefacts.");
+
+    // Linear
+    AddChoice              ("interpolator.linear", "Linear interpolation");
+    SetParameterDescription("interpolator.linear", "Linear interpolation leads to average image quality but is quite fast");
+    SetDefaultParameterInt ("interpolator.bco.radius", 2);
 
     // Spacing of the output image
     AddParameter(ParameterType_Group, "output", "Output Image Grid");
-    SetParameterDescription("output",
-                            "This group of parameters allows to define the grid on which the input image will be resampled.");
-    AddParameter(ParameterType_Float, "output.spacing", "Pixel Size");
-    SetParameterDescription("output.spacing",
-                            "Size of each pixel along X axis (meters for cartographic projections, degrees for geographic ones)");
-    MandatoryOff("output.spacing");
+    SetParameterDescription          ("output", "Output mosaic pixel grid parameters");
 
-    // temp. dir
-    AddParameter(ParameterType_Directory,"tmpdir","Directory where to write temporary files");
-    SetParameterDescription("tmpdir","This applications need to write temporary files for each image. This parameter allows choosing the path where to write those files. If disabled, the current path will be used.");
-    MandatoryOff("tmpdir");
+    // Spacing X
+    AddParameter(ParameterType_Float, "output.spacingx", "Pixel Size (X)");
+    SetMinimumParameterFloatValue    ("output.spacingx", 0);
+    SetParameterDescription          ("output.spacingx", "Physical size (X) of output image pixels, in cartographic units.");
+    MandatoryOff                     ("output.spacingx");
 
-    AddParameter(ParameterType_Group, "distancemap", "Distance map images computation");
-    AddParameter(ParameterType_Float, "distancemap.sr", "Distance map images sampling ratio");
+    // Spacing Y
+    AddParameter(ParameterType_Float, "output.spacingy", "Pixel Size (Y)");
+    SetMinimumParameterFloatValue    ("output.spacingy", 0);
+    SetParameterDescription          ("output.spacingy", "Physical size (Y) of output image pixels, in cartographic units..");
+    MandatoryOff                     ("output.spacingy");
+
+    // Directory for temporary files
+    AddParameter(ParameterType_Directory,"tmpdir","Directory for temporary files");
+    SetParameterDescription             ("tmpdir","Directory for temporary files. If not set, the output image parent directory is used.");
+    MandatoryOff                        ("tmpdir");
+
+    AddParameter(ParameterType_Group, "distancemap", "Distance maps computation");
+    AddParameter(ParameterType_Float, "distancemap.sr", "Distance maps sampling ratio");
     SetParameterDescription("distancemap.sr",
-                            "Can be increased if input images are too big to fit the RAM, or in order to speed up the process");
+                            "Distance maps are computed when the compositing method uses feathering. "
+                            "The distance maps sampling ratio is the ratio between the distance map physical spacing and the "
+                            "physical spacing of the original image. It is used to change the distance maps physical spacing: "
+                            "since the distance map computation is not a streamable pipeline, it can be useful to compute slightly "
+                            "smaller distance maps. distancemap.sr can be hence increased if input images are too big to fit the RAM, "
+                            "or in order to speed up the process");
     SetDefaultParameterFloat("distancemap.sr", 10);
 
     // no-data value
     AddParameter(ParameterType_Float, "nodata", "no-data value");
-    SetDefaultParameterFloat("nodata", 0.0);
-    MandatoryOff("nodata");
+    SetParameterDescription          ("nodata", "The no-data value is ignored during statistics computations (for color harmonisation) and "
+        "for the mosaic compositing.");
+    SetDefaultParameterFloat         ("nodata", 0.0);
+    MandatoryOff                     ("nodata");
 
     AddRAMParameter();
 
@@ -598,8 +611,7 @@ private:
       // Keep scales
       scales.set_column(band, solver->GetOutputCorrectionModel() );
 
-      otbAppLogINFO("\n\t[ Band " << band << " ]"
-                                  << "\n\tGains  : " << solver->GetOutputCorrectionModel() );
+      otbAppLogINFO("\n\t[ Band " << band << " ]" << "\n\tGains  : " << solver->GetOutputCorrectionModel() );
       }
 
     // Set filter correction model
@@ -618,16 +630,14 @@ private:
       {
       case Interpolator_Linear:
         {
-        typedef itk::LinearInterpolateImageFunction<FloatVectorImageType,
-                                                    double>          LinearInterpolationType;
+        typedef itk::LinearInterpolateImageFunction<FloatVectorImageType, double> LinearInterpolationType;
         LinearInterpolationType::Pointer interpolator = LinearInterpolationType::New();
         filter->SetInterpolator(interpolator);
         }
         break;
       case Interpolator_NNeighbor:
         {
-        typedef itk::NearestNeighborInterpolateImageFunction<FloatVectorImageType,
-                                                             double> NearestNeighborInterpolationType;
+        typedef itk::NearestNeighborInterpolateImageFunction<FloatVectorImageType, double> NearestNeighborInterpolationType;
         NearestNeighborInterpolationType::Pointer interpolator = NearestNeighborInterpolationType::New();
         filter->SetInterpolator(interpolator);
         }
@@ -649,25 +659,33 @@ private:
   template <class TMosaicFilterType>
   void SetSpacing(typename TMosaicFilterType::Pointer& filter)
   {
-    FloatVectorImageType::SpacingType outputSpacing;
+    if (!this->HasValue("output.spacingx") && !this->HasValue("output.spacingy"))
+      return;
 
+    // Retrieve original spacing and size
     filter->SetAutomaticOutputParametersComputation(true);
     filter->UpdateOutputInformation();
-    if (this->HasValue("output.spacing") )
+    FloatVectorImageType::SpacingType spacing = filter->GetOutput()->GetSignedSpacing();
+    FloatVectorImageType::SizeType size = filter->GetOutputSize();
+
+    // Compute new spacing and size
+    if (this->HasValue("output.spacingx"))
       {
-      outputSpacing[0] = GetParameterFloat("output.spacing");
-      outputSpacing[1] = -1.0 * GetParameterFloat("output.spacing");
-      typename TMosaicFilterType::OutputImageSpacingType spacing = filter->GetOutputSpacing();
-      typename TMosaicFilterType::OutputImageSizeType size = filter->GetOutputSize();
-      typename TMosaicFilterType::OutputImagePointType origin = filter->GetOutputOrigin();
-      size[0] *= (spacing[0] / outputSpacing[0]);
-      size[1] *= (spacing[1] / outputSpacing[1]);
-      filter->SetOutputSpacing(outputSpacing);
-      filter->SetOutputOrigin(origin);
-      filter->SetOutputSize(size);
-      filter->SetAutomaticOutputParametersComputation(false);
-      filter->UpdateOutputInformation();
+      spacing[0] = GetParameterFloat("output.spacingx");
+      size[0] *= std::abs(spacing[0] / GetParameterFloat("output.spacingx"));
       }
+    if (this->HasValue("output.spacingy"))
+      {
+      spacing[1] = -1.0 * GetParameterFloat("output.spacingy");
+      size[1] *= std::abs(spacing[1] / GetParameterFloat("output.spacingy"));
+      }
+
+    // Change spacing and size
+    filter->SetOutputSpacing(spacing);
+    filter->SetOutputSize(size);
+    filter->SetAutomaticOutputParametersComputation(false);
+    filter->UpdateOutputInformation();
+
   }
 
   /*
@@ -731,13 +749,11 @@ private:
 
     if (GetParameterByKey("vdcut")->HasValue() && nCutline != nImages)
       {
-      otbAppLogFATAL("Number of input cutlines (" << nCutline
-                     << ") should be equal to number of images (" << nImages << ")");
+      otbAppLogFATAL("Number of input cutlines (" << nCutline << ") should be equal to number of images (" << nImages << ")");
       }
     if (GetParameterByKey("vdstats")->HasValue() && nMasks != nImages)
       {
-      otbAppLogFATAL("Number of input masks (" << nMasks
-                     << ") should be equal to number of images (" << nImages << ")");
+      otbAppLogFATAL("Number of input masks (" << nMasks << ") should be equal to number of images (" << nImages << ")");
       }
   }
 
