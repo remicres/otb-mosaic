@@ -63,7 +63,6 @@ How to use it?
 =======
 
 Mosaic can be used as any OTB application (gui, command line, python, c++, ...).
-To add the application in QGIS, just copy the file "_Mosaic.xml_" into the qgis/python/plugins/processing/algs/otb/description/5.0.0/ path.
 
 Licence
 =======
