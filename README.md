@@ -24,7 +24,11 @@ Supported interpolators are
 
 ## Output spacing
 
-Spacing of the output mosaic can be changed using __-output.spacing__
+Spacing of the output mosaic can be changed using __-output.spacingx__ and __-output.spacingy__
+
+## No-data value
+
+The no-data value, used in both harmonization process and compositing process, can be changed using the __-nodata__ parameter
 
 ## Cutline (vector data)
 
