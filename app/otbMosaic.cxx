@@ -373,15 +373,23 @@ private:
 
     // Reproject VectorData
     VectorDataReprojFilterType::Pointer vdReproj = VectorDataReprojFilterType::New();
-
     vdReproj->SetInputVectorData(vd);
     vdReproj->SetInputImage(reference);
-    vdReproj->Update();
 
     // Rasterize vector data
     GDALAllRegister();
     RasterizerType::Pointer rasterizer = RasterizerType::New();
-    rasterizer->AddVectorData(vdReproj->GetOutput() );
+    if (vd->GetProjectionRef().empty())
+      {
+      otbAppLogWARNING("No CRS in the vector data. Using image CRS instead!")
+      rasterizer->AddVectorData(vd);
+      }
+    else
+      {
+      vdReproj->Update();
+      rasterizer->AddVectorData(vdReproj->GetOutput() );
+      }
+
     rasterizer->SetOutputOrigin(reference->GetOrigin() );
     LabelImageType::SizeType outputSize = reference->GetLargestPossibleRegion().GetSize();
     outputSize[0] /= spacingRatio;
