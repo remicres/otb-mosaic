@@ -7,7 +7,7 @@ namespace otb {
 
 template<class ValueType> QuadraticallyConstrainedSimpleSolver<ValueType>
 ::QuadraticallyConstrainedSimpleSolver() {
-  m_WeightOfStandardDeviationTerm = itk::NumericTraits<ValueType>::One;
+  m_WeightOfStandardDeviationTerm = 1.0;
   oft = Cost_Function_rmse;
 }
 
@@ -23,7 +23,7 @@ template<class ValueType> QuadraticallyConstrainedSimpleSolver<ValueType>
  */
 template<class ValueType>
 void QuadraticallyConstrainedSimpleSolver<ValueType>
-::DFS(std::vector<bool> & marked, unsigned int s)
+::DFS(std::vector<bool> & marked, unsigned int s) const
 {
 
   // mark the s vertex
@@ -45,7 +45,7 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
  */
 template<class ValueType>
 void QuadraticallyConstrainedSimpleSolver<ValueType>
-::CheckInputs() {
+::CheckInputs() const {
 
   // Check area matrix is non empty
   const unsigned int n = m_AreaInOverlaps.cols();
@@ -101,16 +101,12 @@ void QuadraticallyConstrainedSimpleSolver<ValueType>
  * OOQP (Fastest, o(n)) and Quadprog++ (Fast, o(n)), and CGAL exact type solver (very slow, o(n^a) with a>1)
  * but has to rely on external dependencies...
  *
- * (see Cresson & St-Geours in IEEE JSTARS, "Natural color satellite image
- *  mosaicking using quadratic programming in decorrelated color space")
- *
- *
  */
 template<class ValueType>
-typename QuadraticallyConstrainedSimpleSolver<ValueType>::DoubleMatrixType
+const typename QuadraticallyConstrainedSimpleSolver<ValueType>::DoubleMatrixType
 QuadraticallyConstrainedSimpleSolver<ValueType>
-::GetQuadraticObjectiveMatrix(DoubleMatrixType areas, DoubleMatrixType means,
-    DoubleMatrixType stds, DoubleMatrixType mops)
+::GetQuadraticObjectiveMatrix(const DoubleMatrixType & areas, const DoubleMatrixType & means,
+		const DoubleMatrixType & stds, const DoubleMatrixType & mops)
 {
     // Set STD matrix weight
     ValueType w;
@@ -181,9 +177,9 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
  * Returns the sub-matrix of mat, composed only by rows/cols in idx
  */
 template<class ValueType>
-typename QuadraticallyConstrainedSimpleSolver<ValueType>::DoubleMatrixType
+const typename QuadraticallyConstrainedSimpleSolver<ValueType>::DoubleMatrixType
 QuadraticallyConstrainedSimpleSolver<ValueType>
-::ExtractMatrix(RealMatrixType mat, ListIndexType idx)
+::ExtractMatrix(const RealMatrixType & mat, const ListIndexType & idx)
  {
   unsigned int n = idx.size();
   DoubleMatrixType newMat(n,n,0);
@@ -210,20 +206,22 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
   // Check matrices dimensions
   CheckInputs();
 
+  // Display a warning if overlap matrix is null
+  if (m_AreaInOverlaps.max_value() == 0)
+    {
+    itkExceptionMacro("No overlap in images!");
+    }
+
   // Identify the connected components
   unsigned int nbOfComponents = m_AreaInOverlaps.rows();
   unsigned int nextVertex = 0;
   std::vector< ListIndexType > connectedComponentsIndices;
-  std::vector<bool> markedVertices;
-  for (unsigned int i = 0 ; i < nbOfComponents ; i++)
-    markedVertices.push_back(false);
+  std::vector<bool> markedVertices (nbOfComponents, false);
   bool allMarked = false;
   while (!allMarked)
     {
     // Depth First Search starting from nextVertex
-    std::vector<bool> marked;
-    for (unsigned int i = 0 ; i < nbOfComponents ; i++)
-      marked.push_back(false);
+    std::vector<bool> marked (nbOfComponents, false);
     DFS(marked, nextVertex);
 
     // Id the connected component
@@ -236,10 +234,11 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
         list.push_back(i);
         markedVertices[i] = true;
         }
-      else
+      else if (!markedVertices[i])
         {
         // if the i-th vertex is not marked, DFS will start from it next
         nextVertex = i;
+        break;
         }
       }
     connectedComponentsIndices.push_back(list);
@@ -256,6 +255,9 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
   m_OutputCorrectionModel.fill(itk::NumericTraits<ValueType>::One);
 
   // Extract and solve all connected components one by one
+  if (connectedComponentsIndices.size() > 1)
+    itkWarningMacro("Seems to be more that one group of overlapping images. Trying to harmonize groups separately.");
+
   for (unsigned int component = 0 ; component < connectedComponentsIndices.size() ; component++)
     {
     // Indices list
@@ -304,8 +306,6 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
       }
 
     }
-
-
 
 }
 

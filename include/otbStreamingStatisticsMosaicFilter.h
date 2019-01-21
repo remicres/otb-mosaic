@@ -51,44 +51,25 @@ public:
   typedef typename Superclass::InputImagePointer           InputImagePointer;
   typedef typename Superclass::InputImagePointType         InputImagePointType;
   typedef typename Superclass::InputImagePixelType         InputImagePixelType;
-  typedef typename Superclass::InputImageIndexType         InputImageIndexType;
-  typedef typename Superclass::InputImageSizeType          InputImageSizeType;
-  typedef typename Superclass::InputImageSpacingType       InputImageSpacingType;
   typedef typename Superclass::InputImageInternalPixelType InputImageInternalPixelType;
-  typedef typename Superclass::InputImageRegionType        InputImageRegionType;
 
   /** Output image typedefs.  */
   typedef typename Superclass::OutputImageType              OutputImageType;
-  typedef typename Superclass::OutputImagePointer           OutputImagePointer;
   typedef typename Superclass::OutputImagePointType         OutputImagePointType;
-  typedef typename Superclass::OutputImagePixelType         OutputImagePixelType;
-  typedef typename Superclass::OutputImageIndexType         OutputImageIndexType;
-  typedef typename Superclass::OutputImageSizeType          OutputImageSizeType;
-  typedef typename Superclass::OutputImageSpacingType       OutputImageSpacingType;
-  typedef typename Superclass::OutputImageInternalPixelType OutputImageInternalPixelType;
   typedef typename Superclass::OutputImageRegionType        OutputImageRegionType;
 
   /** Internal computing typedef support. */
   typedef typename Superclass::InternalValueType       InternalValueType;
-  typedef typename Superclass::ContinuousIndexType     ContinuousIndexType;
-  typedef typename Superclass::InterpolatorType        InterpolatorType;
   typedef typename Superclass::InterpolatorPointerType InterpolatorPointerType;
-  typedef typename Superclass::DefaultInterpolatorType DefaultInterpolatorType;
-  typedef typename Superclass::InternalImageType       InternalImageType;
-  typedef typename Superclass::InternalPixelType       InternalPixelType;
-  typedef typename Superclass::ConstIteratorType       ConstIteratorType;
-  typedef typename Superclass::StreamingTraitsType     StreamingTraitsType;
 
   typedef itk::ImageRegionConstIteratorWithOnlyIndex<OutputImageType> IteratorType;
 
   /** Typedefs for statistics */
-  typedef vnl_matrix<InternalValueType>       RealMatrixType;
-  typedef vnl_vector<InternalValueType>       RealVectorType;
-  typedef vnl_matrix<long>                    LongMatrixType;
-  typedef vnl_vector<long>                    LongVectorType;
-  typedef std::vector<RealMatrixType>         RealMatrixListType;
+  typedef vnl_vector<InternalValueType>                       RealVectorType;
+  typedef vnl_matrix<InternalValueType>                       RealMatrixType;
+  typedef itk::SimpleDataObjectDecorator<RealMatrixType>      RealMatrixObjectType;
+  typedef std::vector<RealMatrixType>                         RealMatrixListType;
   typedef itk::SimpleDataObjectDecorator<RealMatrixListType>  RealMatrixListObjectType;
-  typedef itk::SimpleDataObjectDecorator<LongMatrixType>      LongMatrixObjectType;
 
   /** Smart Pointer type to a DataObject. */
   typedef typename itk::DataObject::Pointer DataObjectPointer;
@@ -100,8 +81,7 @@ public:
   virtual void Reset();
   virtual void Synthetize();
 
-  /** Make a DataObject of the correct type to be used as the specified
-   * output. */
+  /** Make a DataObject of the correct type to be used as the specified output. */
   DataObjectPointer MakeOutput(DataObjectPointerArraySizeType idx) ITK_OVERRIDE;
   using Superclass::MakeOutput;
 
@@ -146,12 +126,12 @@ public:
   const RealMatrixListObjectType* GetMeansOfProductsOutput() const;
 
   /** Return the computed areas. */
-  LongMatrixType GetAreas() const
+  RealMatrixType GetAreas() const
   {
     return this->GetAreasOutput()->Get();
   }
-  LongMatrixObjectType* GetAreasOutput();
-  const LongMatrixObjectType* GetAreasOutput() const;
+  RealMatrixObjectType* GetAreasOutput();
+  const RealMatrixObjectType* GetAreasOutput() const;
 
 protected:
   PersistentStatisticsMosaicFilter();
@@ -192,30 +172,30 @@ public:
     /* Copy constructor */
     ThreadResultsContainer(const ThreadResultsContainer& other)
     {
-      m_count   = LongVectorType(other.m_count);
-      m_sum     = RealMatrixType(other.m_sum);
-      m_cosum   = RealMatrixType(other.m_cosum);
-      m_sqSum   = RealMatrixType(other.m_sqSum);
-      m_min     = RealMatrixType(other.m_min);
-      m_max     = RealMatrixType(other.m_max);
+      m_count = RealVectorType(other.m_count);
+      m_sum   = RealMatrixType(other.m_sum);
+      m_cosum = RealMatrixType(other.m_cosum);
+      m_sqSum = RealMatrixType(other.m_sqSum);
+      m_min   = RealMatrixType(other.m_min);
+      m_max   = RealMatrixType(other.m_max);
     }
 
     /* Clear routine: Resize at the specified dimension and clear values */
     void Clear(unsigned int nbOfBands, unsigned int nbOfSamples)
     {
-      InternalValueType zeroValue  = itk::NumericTraits<InternalValueType>::Zero;
-      InternalValueType supValue   = itk::NumericTraits<InternalValueType>::max();
-      InternalValueType infValue   = itk::NumericTraits<InternalValueType>::NonpositiveMin();
+      const InternalValueType zeroValue = itk::NumericTraits<InternalValueType>::Zero;
+      const InternalValueType supValue  = itk::NumericTraits<InternalValueType>::max();
+      const InternalValueType infValue  = itk::NumericTraits<InternalValueType>::NonpositiveMin();
 
-      m_count   = LongVectorType(nbOfSamples,0);
-      m_sum     = RealMatrixType(nbOfBands,nbOfSamples,zeroValue);
-      m_cosum   = RealMatrixType(nbOfBands,nbOfSamples,zeroValue);
-      m_sqSum   = RealMatrixType(nbOfBands,nbOfSamples,zeroValue);
-      m_min     = RealMatrixType(nbOfBands,nbOfSamples,supValue);
-      m_max     = RealMatrixType(nbOfBands,nbOfSamples,infValue);
+      m_count = RealVectorType(nbOfSamples, 0);
+      m_sum   = RealMatrixType(nbOfBands, nbOfSamples, zeroValue);
+      m_cosum = RealMatrixType(nbOfBands, nbOfSamples, zeroValue);
+      m_sqSum = RealMatrixType(nbOfBands, nbOfSamples, zeroValue);
+      m_min   = RealMatrixType(nbOfBands, nbOfSamples, supValue);
+      m_max   = RealMatrixType(nbOfBands, nbOfSamples, infValue);
     }
 
-    /* Pixel update */
+    /* 1-Pixel update */
     void Update( const InputImagePixelType& pixel, unsigned int sampleId)
     {
       unsigned int nbOfBands = pixel.Size();
@@ -238,7 +218,7 @@ public:
         }
     }
 
-    /* 2 pixels update */
+    /* 2-Pixels update */
     void Update( const InputImagePixelType& pixel_i,const InputImagePixelType& pixel_j, unsigned int sampleId)
     {
       Update(pixel_i, sampleId);
@@ -280,11 +260,11 @@ public:
     RealMatrixType   m_cosum;
     RealMatrixType   m_min;
     RealMatrixType   m_max;
-    LongVectorType   m_count;
+    RealVectorType   m_count;
   };
 
   // Internal threads count
-  std::vector<ThreadResultsContainer> internalThreadResults;
+  std::vector<ThreadResultsContainer> m_InternalThreadResults;
 
   // Results
   RealMatrixListType m_Means;
@@ -292,14 +272,13 @@ public:
   RealMatrixListType m_ProdMeans;
   RealMatrixListType m_Mins;
   RealMatrixListType m_Maxs;
-  LongMatrixType     m_Area;
+  RealMatrixType     m_Area;
 
 private:
   PersistentStatisticsMosaicFilter(const Self&); //purposely not implemented
   void operator=(const Self&);                  //purposely not implemented
 
 }; // end of class
-
 
 
 /*
@@ -325,53 +304,19 @@ public:
   itkTypeMacro(StreamingStatisticsMosaicFilter, PersistentFilterStreamingDecorator);
 
   /** Typedefs for statistics */
+  typedef typename Superclass::FilterType::RealMatrixType              RealMatrixType;
+  typedef typename Superclass::FilterType::RealMatrixObjectType        RealMatrixObjectType;
   typedef typename Superclass::FilterType::RealMatrixListType          RealMatrixListType;
-  typedef typename Superclass::FilterType::LongMatrixType              LongMatrixType;
   typedef typename Superclass::FilterType::RealMatrixListObjectType    RealMatrixListObjectType;
-  typedef typename Superclass::FilterType::LongMatrixObjectType        LongMatrixObjectType;
 
   /** Input image typedefs.  */
   typedef typename Superclass::FilterType::InputImageType              InputImageType;
-  typedef typename Superclass::FilterType::InputImagePointer           InputImagePointer;
-  typedef typename Superclass::FilterType::InputImagePointType         InputImagePointType;
-  typedef typename Superclass::FilterType::InputImagePixelType         InputImagePixelType;
-  typedef typename Superclass::FilterType::InputImageIndexType         InputImageIndexType;
-  typedef typename Superclass::FilterType::InputImageSizeType          InputImageSizeType;
-  typedef typename Superclass::FilterType::InputImageSpacingType       InputImageSpacingType;
-  typedef typename Superclass::FilterType::InputImageInternalPixelType InputImageInternalPixelType;
-  typedef typename Superclass::FilterType::InputImageRegionType        InputImageRegionType;
-
-  /** Output image typedefs.  */
-  typedef typename Superclass::FilterType::OutputImageType              OutputImageType;
-  typedef typename Superclass::FilterType::OutputImagePointer           OutputImagePointer;
-  typedef typename Superclass::FilterType::OutputImagePointType         OutputImagePointType;
-  typedef typename Superclass::FilterType::OutputImagePixelType         OutputImagePixelType;
-  typedef typename Superclass::FilterType::OutputImageIndexType         OutputImageIndexType;
-  typedef typename Superclass::FilterType::OutputImageSizeType          OutputImageSizeType;
-  typedef typename Superclass::FilterType::OutputImageSpacingType       OutputImageSpacingType;
-  typedef typename Superclass::FilterType::OutputImageInternalPixelType OutputImageInternalPixelType;
-  typedef typename Superclass::FilterType::OutputImageRegionType        OutputImageRegionType;
-
-  /** Internal computing typedef support. */
-  typedef typename Superclass::FilterType::InternalValueType       InternalValueType;
-  typedef typename Superclass::FilterType::ContinuousIndexType     ContinuousIndexType;
-  typedef typename Superclass::FilterType::InterpolatorType        InterpolatorType;
-  typedef typename Superclass::FilterType::InterpolatorPointerType InterpolatorPointerType;
-  typedef typename Superclass::FilterType::DefaultInterpolatorType DefaultInterpolatorType;
-  typedef typename Superclass::FilterType::InternalImageType       InternalImageType;
-  typedef typename Superclass::FilterType::InternalPixelType       InternalPixelType;
-  typedef typename Superclass::FilterType::IteratorType            IteratorType;
-  typedef typename Superclass::FilterType::ConstIteratorType       ConstIteratorType;
-  typedef typename Superclass::FilterType::StreamingTraitsType     StreamingTraitsType;
 
   using Superclass::PushBackInput;
   void PushBackInput(InputImageType * input)
   {
     this->GetFilter()->PushBackInput(input);
   }
-
-//  otbSetObjectMemberMacro(Filter, NoDataValue, RealType);
-//  otbGetObjectMemberMacro(Filter, NoDataValue, RealType);
 
   /** Return the computed Means. */
   RealMatrixListType GetMeans() const
@@ -444,15 +389,15 @@ public:
   }
 
   /** Return the computed Areas. */
-  LongMatrixType GetAreas() const
+  RealMatrixType GetAreas() const
   {
     return this->GetFilter()->GetAreasOutput()->Get();
   }
-  LongMatrixObjectType* GetAreasOutput()
+  RealMatrixObjectType* GetAreasOutput()
   {
     return this->GetFilter()->GetAreasOutput();
   }
-  const LongMatrixObjectType* GetAreasOutput() const
+  const RealMatrixObjectType* GetAreasOutput() const
   {
     return this->GetFilter()->GetAreasOutput();
   }

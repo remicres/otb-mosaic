@@ -27,8 +27,8 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
   // just decorators around real matrices
   //
   // 6: count
-  typename LongMatrixObjectType::Pointer output
-  = static_cast<LongMatrixObjectType*>(this->MakeOutput(6).GetPointer());
+  typename RealMatrixObjectType::Pointer output
+  = static_cast<RealMatrixObjectType*>(this->MakeOutput(6).GetPointer());
   this->itk::ProcessObject::SetNthOutput(6, output.GetPointer());
 
 }
@@ -48,7 +48,7 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
     }
   else if (output == 6)
     {
-    return static_cast<itk::DataObject*>(LongMatrixObjectType::New().GetPointer());
+    return static_cast<itk::DataObject*>(RealMatrixObjectType::New().GetPointer());
     }
   return static_cast<itk::DataObject*>(RealMatrixListObjectType::New().GetPointer());
 
@@ -95,11 +95,11 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 }
 
 template <class TInputImage, class TOutputImage, class TInternalValueType>
-typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::LongMatrixObjectType*
+typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixObjectType*
 PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 ::GetAreasOutput()
 {
-  return static_cast<LongMatrixObjectType*>(this->itk::ProcessObject::GetOutput(6));
+  return static_cast<RealMatrixObjectType*>(this->itk::ProcessObject::GetOutput(6));
 }
 
 template <class TInputImage, class TOutputImage, class TInternalValueType>
@@ -143,11 +143,11 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 }
 
 template <class TInputImage, class TOutputImage, class TInternalValueType>
-const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::LongMatrixObjectType*
+const typename PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>::RealMatrixObjectType*
 PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 ::GetAreasOutput() const
 {
-  return static_cast<const LongMatrixObjectType*>(this->itk::ProcessObject::GetOutput(6));
+  return static_cast<const RealMatrixObjectType*>(this->itk::ProcessObject::GetOutput(6));
 }
 
 /**
@@ -164,19 +164,19 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 
   // Prepare threads result
   const unsigned int numberOfThreads = this->GetNumberOfThreads();
-  unsigned int nBands = this->GetNumberOfBands();
-  unsigned int nbImages = this->GetNumberOfInputImages();
+  const unsigned int nBands = this->GetNumberOfBands();
+  const unsigned int nbImages = this->GetNumberOfInputImages();
 
   itkDebugMacro ( << "\nN threads: " << numberOfThreads <<
       "\nN bands: " << nBands <<
       "\nN images: " << nbImages );
 
-  internalThreadResults.clear();
+  m_InternalThreadResults.clear();
   for (unsigned int threadId = 0 ; threadId < numberOfThreads ; threadId++)
     {
     // Create a clean empty container for each thread
     ThreadResultsContainer threadResult(nBands,nbImages*nbImages);
-    internalThreadResults.push_back(threadResult);
+    m_InternalThreadResults.push_back(threadResult);
     }
 
  }
@@ -204,15 +204,14 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
 {
   itkDebugMacro( << "Entering Synthetize()" );
 
-  unsigned int nBands = Superclass::GetNumberOfBands();
-  unsigned int nbImages = this->GetNumberOfInputImages();
-  const unsigned int numberOfThreads = this->GetNumberOfThreads();
+  const unsigned int nBands = Superclass::GetNumberOfBands();
+  const unsigned int nbImages = this->GetNumberOfInputImages();
 
   // Merge threads result
   ThreadResultsContainer finalResults = ThreadResultsContainer(nBands,nbImages*nbImages);
-  for (unsigned int threadId = 0 ; threadId < numberOfThreads ; threadId++)
+  for (const auto& res: m_InternalThreadResults)
     {
-    finalResults.Update(internalThreadResults.at(threadId) );
+    finalResults.Update(res);
     }
 
   // Compute final outputs
@@ -221,7 +220,7 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
   m_ProdMeans.clear();
   m_Mins.clear();
   m_Maxs.clear();
-  m_Area = LongMatrixType(nbImages,nbImages,0);
+  m_Area = RealMatrixType(nbImages,nbImages,0);
 
   for (unsigned int band = 0 ; band < nBands ; band++)
     {
@@ -236,27 +235,28 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
       for (unsigned int j = 0 ; j < nbImages ; j++)
         {
 
-        long              count    = finalResults.m_count[i*nbImages+j];
-        InternalValueType sum      = finalResults.m_sum[band][i*nbImages+j];
-        InternalValueType cosum    = finalResults.m_cosum[band][i*nbImages+j];
-        InternalValueType sqSum    = finalResults.m_sqSum[band][i*nbImages+j];
-        InternalValueType minValue = finalResults.m_min[band][i*nbImages+j];
-        InternalValueType maxValue = finalResults.m_max[band][i*nbImages+j];
+    	const InternalValueType count  = finalResults.m_count[i*nbImages+j];
+        const InternalValueType sum    = finalResults.m_sum[band][i*nbImages+j];
+        const InternalValueType cosum  = finalResults.m_cosum[band][i*nbImages+j];
+        const InternalValueType sqSum  = finalResults.m_sqSum[band][i*nbImages+j];
+        const InternalValueType minVal = finalResults.m_min[band][i*nbImages+j];
+        const InternalValueType maxVal = finalResults.m_max[band][i*nbImages+j];
 
         // Update area
         m_Area[i][j] = count;
 
         // Update Min and Max
-        if (minValue < min[i][j])
-          min[i][j] = minValue;
-        if (maxValue > max[i][j])
-          max[i][j] = maxValue;
+        if (minVal < min[i][j])
+          min[i][j] = minVal;
+        if (maxVal > max[i][j])
+          max[i][j] = maxVal;
 
         // Update Mean, Std and Mean of products
         if (count > 0)
           {
           mean[i][j]      = sum   / (static_cast<InternalValueType>(count) );
           prodmean[i][j]  = cosum / (static_cast<InternalValueType>(count) );
+
           // Unbiased estimate
           InternalValueType variance = (sqSum - (sum*sum
               / static_cast<InternalValueType>(count) ) )
@@ -378,7 +378,7 @@ PersistentStatisticsMosaicFilter<TInputImage, TOutputImage, TInternalValueType>
           InputImagePixelType otherPixel = overlapPixelValue.at(j);
 
           // Update
-          internalThreadResults.at(threadId).Update(pixel, otherPixel, imageIndex*nbOfInputImages + otherImageIndex);
+          m_InternalThreadResults.at(threadId).Update(pixel, otherPixel, imageIndex*nbOfInputImages + otherImageIndex);
           }
         }
       } // loop on overlapping pixels

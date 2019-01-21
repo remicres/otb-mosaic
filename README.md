@@ -24,7 +24,11 @@ Supported interpolators are
 
 ## Output spacing
 
-Spacing of the output mosaic can be changed using __-output.spacing__
+Spacing of the output mosaic can be changed using __-output.spacingx__ and __-output.spacingy__
+
+## No-data value
+
+The no-data value, used in both harmonization process and compositing process, can be changed using the __-nodata__ parameter
 
 ## Cutline (vector data)
 
@@ -59,7 +63,6 @@ How to use it?
 =======
 
 Mosaic can be used as any OTB application (gui, command line, python, c++, ...).
-To add the application in QGIS, just copy the file "_Mosaic.xml_" into the qgis/python/plugins/processing/algs/otb/description/5.0.0/ path.
 
 Licence
 =======
