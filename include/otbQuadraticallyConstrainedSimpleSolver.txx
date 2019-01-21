@@ -206,20 +206,22 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
   // Check matrices dimensions
   CheckInputs();
 
+  // Display a warning if overlap matrix is null
+  if (m_AreaInOverlaps.max_value() == 0)
+    {
+    itkExceptionMacro("No overlap in images!");
+    }
+
   // Identify the connected components
   unsigned int nbOfComponents = m_AreaInOverlaps.rows();
   unsigned int nextVertex = 0;
   std::vector< ListIndexType > connectedComponentsIndices;
-  std::vector<bool> markedVertices;
-  for (unsigned int i = 0 ; i < nbOfComponents ; i++)
-    markedVertices.push_back(false);
+  std::vector<bool> markedVertices (nbOfComponents, false);
   bool allMarked = false;
   while (!allMarked)
     {
     // Depth First Search starting from nextVertex
-    std::vector<bool> marked;
-    for (unsigned int i = 0 ; i < nbOfComponents ; i++)
-      marked.push_back(false);
+    std::vector<bool> marked (nbOfComponents, false);
     DFS(marked, nextVertex);
 
     // Id the connected component
@@ -232,10 +234,11 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
         list.push_back(i);
         markedVertices[i] = true;
         }
-      else
+      else if (!markedVertices[i])
         {
         // if the i-th vertex is not marked, DFS will start from it next
         nextVertex = i;
+        break;
         }
       }
     connectedComponentsIndices.push_back(list);
@@ -252,6 +255,9 @@ QuadraticallyConstrainedSimpleSolver<ValueType>
   m_OutputCorrectionModel.fill(itk::NumericTraits<ValueType>::One);
 
   // Extract and solve all connected components one by one
+  if (connectedComponentsIndices.size() > 1)
+    itkWarningMacro("Seems to be more that one group of overlapping images. Trying to harmonize groups separately.");
+
   for (unsigned int component = 0 ; component < connectedComponentsIndices.size() ; component++)
     {
     // Indices list
