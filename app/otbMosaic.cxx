@@ -679,13 +679,13 @@ private:
     // Compute new spacing and size
     if (this->HasValue("output.spacingx"))
       {
-      spacing[0] = GetParameterFloat("output.spacingx");
       size[0] *= std::abs(spacing[0] / GetParameterFloat("output.spacingx"));
+      spacing[0] = GetParameterFloat("output.spacingx");
       }
     if (this->HasValue("output.spacingy"))
       {
-      spacing[1] = -1.0 * GetParameterFloat("output.spacingy");
       size[1] *= std::abs(spacing[1] / GetParameterFloat("output.spacingy"));
+      spacing[1] = -1.0 * GetParameterFloat("output.spacingy");
       }
 
     // Change spacing and size
