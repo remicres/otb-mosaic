@@ -33,7 +33,7 @@
 #include "itkNearestNeighborInterpolateImageFunction.h"
 
 // Functors for lab <--> rgb color spaces
-#include "otbUnaryFunctorImageFilter.h"
+#include "otbFunctorImageFilter.h"
 #include "otbMosaicFunctors.h"
 
 // Masks
@@ -131,10 +131,8 @@ public:
       FloatVectorImageType::PixelType>                                                 LAB2RGBFunctor;
   typedef otb::Functor::RGB2LAB<FloatVectorImageType::PixelType,
       FloatVectorImageType::PixelType>                                                 RGB2LABFunctor;
-  typedef otb::UnaryFunctorImageFilter<FloatVectorImageType,FloatVectorImageType,
-      RGB2LABFunctor>                                                                  RGB2LABFilterType;
-  typedef otb::UnaryFunctorImageFilter<FloatVectorImageType,FloatVectorImageType,
-      LAB2RGBFunctor>                                                                  LAB2RGBFilterType;
+  typedef otb::FunctorImageFilter<RGB2LABFunctor>                                      RGB2LABFilterType;
+  typedef otb::FunctorImageFilter<LAB2RGBFunctor>                                      LAB2RGBFilterType;
 
   /** Interpolators typedefs */
   typedef itk::LinearInterpolateImageFunction<FloatVectorImageType, double>            LinearInterpolationType;

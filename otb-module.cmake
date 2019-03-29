@@ -5,6 +5,7 @@ otb_module(Mosaic
     OTBCommon
     OTBApplicationEngine
     OTBConversion
+    OTBFunctor
   TEST_DEPENDS
     OTBTestKernel
     OTBCommandLine
