@@ -94,9 +94,9 @@ public:
     return output;
   }
 
-  inline unsigned int GetOutputSize(){
+  size_t OutputSize(const std::array<size_t,1> &) const {
     return 3;
-  }
+  } 
 
 private:
   vnl_matrix<double> M;
@@ -185,7 +185,7 @@ public:
     return output;
   }
 
-  inline unsigned int GetOutputSize(){
+  inline size_t OutputSize(const std::array<size_t,1> &) const {
     return 3;
   }
 
