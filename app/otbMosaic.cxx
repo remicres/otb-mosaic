@@ -201,7 +201,6 @@ private:
     SetDescription("Perform a mosaic of input images");
 
     // Documentation
-    SetDocName("Mosaic");
     SetDocLongDescription("This application performs a mosaic of the input images");
     SetDocLimitations("1. When \"comp\" parameter is different than \"none\", the sampling ratio for "
         "distance map computation can be adjusted to make input images fit into memory (distance map "
