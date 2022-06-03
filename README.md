@@ -1,3 +1,5 @@
+**This repository is archived** since Mosaic is now part of the Orfeo ToolBox releases.
+
 Summary
 =======
 
